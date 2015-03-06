@@ -1,0 +1,16 @@
+TODO
+====
+
+- [ ] Figure out a way to partition the categories into two classes intially.
+- [ ] Obtain data set
+- [ ] figure out how to return the obtained classifier to the client via API call.
+- [ ] Plan a way to actually scale the library once it's done.
+
+
+Sort of independent parts:
+
+1. Scaling the library to multiple machines/servers
+
+2. Generating an optimized classifier.
+
+3. Returning the obtained classifer via an API call.
