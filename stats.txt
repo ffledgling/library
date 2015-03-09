@@ -1,0 +1,16 @@
+2015-03-09
+
+Average accuracy
+----------------
+tail -n+127 results-1425862054.txt | grep -P -o '0\.\d+' | awk '{sum += $1} END{print sum/126}'
+0.842727
+
+Maximum accuracy
+----------------
+tail -n+127 results-1425862054.txt | grep -P -o '0\.\d+' | tail -1
+0.95047301057317757
+
+Minimum accuracy
+----------------
+tail -n+127 results-1425862054.txt | grep -P -o '0\.\d+' | head -1
+0.64162493043962154
