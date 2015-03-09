@@ -1,0 +1,25 @@
+TODO:
+-----
++ parse data
++ create combination sets
++ train SVM
++ test + stats
+
+Current iteration issues
+------------------------
+
+- Combinatorial order
+- How well does it work for larger sample sets, more number of classes
+- Brute force SVC used to find optimal, computationally very expensive.
+
+Overall Issues:
+---------------
+
+- How many classes do we want to support? (100s? 1000s? more?)
+
+- How do we visualize our results?
+- How do export the Linear SVM?
+
+- How do we distributed data among multiple nodes?
+- How big is the amount of data one node can handle?
+- Can we plugin hadoop?
