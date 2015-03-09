@@ -127,4 +127,7 @@ if __name__ == '__main__':
         accuracy_list.append((partition, accuracy))
 
     #pprint.pprint(sorted(accuracy_list, key = lambda x: x[1]))
-    print(sorted(accuracy_list, key = lambda x: x[1]))
+    sorted_accuracy_list = sorted(accuracy_list, key = lambda x: x[1])
+    pprint.pprint(sorted_accuracy_list)
+    print ''
+    print 'Highest Accuracy was achieved with the following partition', sorted_accuracy_list[-1]
