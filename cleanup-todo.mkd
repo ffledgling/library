@@ -1,0 +1,2 @@
+- [ ] Replace silly commented out prints with logging (DEBUG, INFO mostly)
+- [ ] Make code adhere to PEP8
