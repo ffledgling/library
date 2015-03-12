@@ -29,11 +29,11 @@ class Metrics(object):
 
     def __init__(self, value=None, accuracy=None, balance=None, overlap=None, margin=None, partition=None):
         self.accuracy = accuracy
-        self.balance = balance
         self.overlap = overlap
         self.margin = margin
         self.partition = partition
 
+        self.balance = 2.0*min(len(partition[0]), len(partition[1]))/(len(partition[0]) + len(partition[1]))
         self.value = objective_function(accuracy=accuracy, balance=balance, overlap=overlap, margin=margin)
 
     def __repr__(self):
@@ -119,12 +119,17 @@ def class_partitions(class_labels):
     return splits
 
 
-def bruteforce_SVM(train, test, class_labels):
+def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
+    # Generates all possible 2-set eqipartitions from the class labels
+    # Computes the SVM, linear or otherwise, for each of these partitions
+    # returns the results
+
     partition_list = class_partitions(class_labels)
+    results = []
 
     for count, partition in enumerate(partition_list):
         partition = tuple(partition)
-        print '#', count, partition,
+        print '#', count
         twoclass_train_data = []
         twoclass_train_label = []
         twoclass_test_data = []
@@ -150,19 +155,18 @@ def bruteforce_SVM(train, test, class_labels):
 
 
         # Train the SVM here
-        clf = svm.LinearSVC()
+        if linear_kernel:
+            clf = svm.LinearSVC()
+        else:
+            clf = svm.SVC()
         clf.fit(twoclass_train_data, twoclass_train_label)
         #print clf
-        accuracy = clf.score(twoclass_test_data, twoclass_test_label)
-        print accuracy
+        current_metric = Metrics(accuracy=clf.score(twoclass_test_data, twoclass_test_label), partition=partition)
 
-        accuracy_list.append((partition, accuracy))
+        results.append(current_metric)
 
-    #pprint.pprint(sorted(accuracy_list, key = lambda x: x[1]))
-    sorted_accuracy_list = sorted(accuracy_list, key = lambda x: x[1])
-    pprint.pprint(sorted_accuracy_list)
-    print ''
-    print 'Highest Accuracy was achieved with the following partition', sorted_accuracy_list[-1]
+    return results
+
 
 def pairwise_SVM_A1(test, train, class_labels):
     # Take pairwise classes
@@ -186,7 +190,8 @@ def pairwise_SVM_A1(test, train, class_labels):
         clf = svm.LinearSVC()
         # Train classifier based on initial two classes.
         # extract data points from the train object, generate labels on the fly
-        clf.fit(train[initial_two[0]] + train[initial_two[1]], [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
+        clf.fit(train[initial_two[0]] + train[initial_two[1]],
+                [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
 
         for label in remaining_labels:
             score = clf.score(train[label], [0]*len(train[label]))
@@ -226,9 +231,7 @@ def pairwise_SVM_A1(test, train, class_labels):
             test_labels += [reverse_mapping[label]]*len(test[label])
 
         #print 'Testing the re-trained optimal partition, score:',
-        a, b = len(mapping[0]), len(mapping[1])
         current_metric = Metrics(accuracy=clf.score(test_samples, test_labels),
-                                 balance=2.0*min(a, b)/(a+b),
                                  partition=tuple(mapping.itervalues()))
 
         print current_metric
@@ -246,9 +249,6 @@ if __name__ == '__main__':
     TESTING_DATA_PATH='optdigits/optdigits.tes'
     CLASS_LABELS = set(range(0,10)) # Class labels are b/w 0..9 (inclusive)
 
-
-    accuracy_list = []
-
     # create training set
     train = create_set(CLASS_LABELS)
     #pprint.pprint(train)
@@ -261,7 +261,8 @@ if __name__ == '__main__':
     populate_dataset(test, TESTING_DATA_PATH)
     #pprint.pprint(train)
 
-    #results = bruteforce_SVM(train, test, CLASS_LABELS)
+    #results = bruteforce_SVM(train, test, CLASS_LABELS, linear_kernel=True)
+    #results = bruteforce_SVM(train, test, CLASS_LABELS, linear_kernel=False)
     results = pairwise_SVM_A1(train, test, CLASS_LABELS)
 
     pprint.pprint(results)

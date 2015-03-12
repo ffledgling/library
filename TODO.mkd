@@ -2,6 +2,9 @@ TODO
 ====
 
 - [ ] Figure out a way to partition the categories into two classes intially.
+    - [x] Equipartition the classes
+    - [x] Take classes pairwise and treat then decide other classes accordingly
+    - [ ] KNN
 - [ ] Obtain data set
 - [ ] figure out how to return the obtained classifier to the client via API call.
 - [ ] Plan a way to actually scale the library once it's done.
