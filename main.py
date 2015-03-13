@@ -183,6 +183,7 @@ def get_optimal_classifier(approach, *args, **kwargs):
     results = approach(*args, **kwargs)
     optimal_result = results[0]
     for result in results:
+        #if result.accuracy > optimal_result.accuracy:
         if result.value > optimal_result.value:
             optimal_result = result
 

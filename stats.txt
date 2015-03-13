@@ -29,6 +29,9 @@ Average Value: 0.93825675008
 2015-13-11
 ==========
 
+Results with a well balanced tree, using 'value' as the split driver
+Varies b/w 87-90.5% (rare occasions go down to 85%)
+
 set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.973029045643)
 	set([8, 1, 2, 4, 6]) -> (0.979338842975)
 		set([8, 1, 2]) -> (1.0)
@@ -50,3 +53,28 @@ set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.973029045643)
 			None
 Correctly labeled classes 1630/1797
 Accuracy: 0.907067334446
+
+Results from an unbalanced tree, using 'accuracy' as the split driver
+Averages a slightly higher 92%
+
+set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.997925311203)
+	None
+	set([1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.993103448276)
+		None
+		set([1, 2, 3, 5, 6, 7, 8, 9]) -> (0.997409326425)
+			set([1, 2, 3, 5, 7, 8, 9]) -> (0.997041420118)
+				set([1, 2, 3, 7, 8, 9]) -> (0.993127147766)
+					set([8, 1, 2, 3, 9]) -> (0.99173553719)
+						set([8, 1, 3, 9]) -> (0.994845360825)
+							None
+							set([8, 9, 1]) -> (0.993103448276)
+								set([8, 1]) -> (0.958762886598)
+									None
+									None
+								None
+						None
+					None
+				None
+			None
+Correctly labeled classes 1664/1797
+Accuracy: 0.925987757373
