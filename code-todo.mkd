@@ -1,16 +1,22 @@
 TODO:
 -----
-+ parse data
-+ create combination sets
-+ train SVM
-+ test + stats
+
+- Allow poorly classified classes to overlap, see if this improves accuracy.
+- Added parallelism.
+- Optimize memory (General)
+- Optimize how data is passed around within the same program/thread/node.
+- Improve TreeNode class' methods.
+
+
+Long Haul TODO:
+---------------
+- Replace ad-hoc printing with propper logging
+- Add progress bars for the library
 
 Current iteration issues
 ------------------------
 
-- Combinatorial order
-- How well does it work for larger sample sets, more number of classes
-- Brute force SVC used to find optimal, computationally very expensive.
+- Low accuracy (~90% with value based optimality)
 
 Overall Issues:
 ---------------

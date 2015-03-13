@@ -25,21 +25,78 @@ class Class(object):
             raise Exception
         self.samples += sample
 
-class Metrics(object):
+class Result(object):
 
-    def __init__(self, value=None, accuracy=None, balance=None, overlap=None, margin=None, partition=None):
+    def __init__(self, value=None, accuracy=None, balance=None, overlap=None, margin=None, partition=None, classifier=None):
         self.accuracy = accuracy
         self.overlap = overlap
         self.margin = margin
         self.partition = partition
+        self.classifier = classifier
 
         self.balance = 2.0*min(len(partition[0]), len(partition[1]))/(len(partition[0]) + len(partition[1]))
-        self.value = objective_function(accuracy=accuracy, balance=balance, overlap=overlap, margin=margin)
+        self.value = objective_function(accuracy=self.accuracy, balance=self.balance, overlap=self.overlap, margin=self.margin)
 
     def __repr__(self):
-        return ('(Value: %s' ' Accuracy: %s, Balance: %s, Overlap: %s, Margin: %s, Partition: %s)'
-                % (repr(self.value),  repr(self.accuracy),  repr(self.balance),  repr(self.overlap),  repr(self.margin),  repr(self.partition)))
+        return ('(Value: %s' ' Accuracy: %s, Balance: %s, Overlap: %s, Margin: %s, Partition: %s, Classifier: %s)'
+                % (repr(self.value),  repr(self.accuracy),  repr(self.balance),  repr(self.overlap),  repr(self.margin),  repr(self.partition), repr(self.classifier)))
 
+
+class TreeNode(object):
+    def __init__(self, train, class_labels):
+        # Assumes train is well shuffled/random/not-ordered
+        print 'Working with the partition: %s' % class_labels
+        self.class_labels = class_labels
+        self.subtrain = {}
+        self.subtest = {}
+        for key in train.keys():
+            l = len(train[key])
+            if l < 8:
+                raise Exception
+                    # too few samples
+            else:
+                self.subtrain[key] = train[key][:l*7/8]
+                self.subtest[key] = train[key][l*7/8:]
+
+        optimal = get_optimal_classifier(pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
+
+        self.classifier = optimal.classifier
+        self.accuracy = optimal.accuracy
+        self.lkeys = optimal.partition[0]
+        self.rkeys = optimal.partition[1]
+        self.lchild = None
+        self.rchild = None
+        if len(self.lkeys) > 1:
+           self.lchild = TreeNode(train, self.lkeys)
+        if len(self.rkeys) > 1:
+           self.rchild = TreeNode(train, self.rkeys)
+
+
+    def __repr__(self):
+        s = ('%s -> (%s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.lchild), repr(self.rchild))).split('\n')
+        return s[0] + '\n' + '\n'.join('\t' + string for string in s[1:])
+
+    def predict(self, feature_vector):
+        if self.classifier.predict(feature_vector) == 0:
+            if len(self.lkeys) > 1:
+                return self.lchild.predict(feature_vector)
+            else:
+                val, = self.lkeys
+                return val
+        else:
+            if len(self.rkeys) > 1:
+                return self.rchild.predict(feature_vector)
+            else:
+                val, = self.rkeys
+                return val
+
+
+    def _score(self, test_vectors, test_labels):
+        predictions = map(self.predict, test_vectors)
+        correct = filter(lambda x: x[0]==x[1], zip(test_labels, predictions))
+        print 'Correctly labeled classes %s/%s' % (len(correct), len(predictions))
+        print 'Accuracy: %s' % (1.0*len(correct)/len(predictions))
+        
 
 def objective_function(accuracy=None, balance=None, overlap=None, margin=None):
     # Take all the different things we measure and create a single unifying function
@@ -67,25 +124,29 @@ def get_statistics(results):
     #   Average Value
     #   Average Accuracy
 
-    max_val=0
-    max_acc=0
-    sum_val=0
-    sum_acc=0
+    max_val=results[0]
+    max_acc=results[0]
+    sum_val=results[0].value
+    sum_acc=results[0].accuracy
+
     size = len(results)
 
-    for metric in results:
-        if metric.accuracy > max_acc:
-            max_acc = metric.accuracy
-        if metric.value > max_val:
-            max_val = metric.value
+    for metric in results[1:]:
+        if metric.accuracy > max_acc.accuracy:
+            max_acc = metric
+        if metric.value > max_val.value:
+            max_val = metric
 
         sum_val += metric.value
         sum_acc += metric.accuracy
 
-    print 'Best Accuracy: %s' % max_acc
-    print 'Highest Value: %s' % max_val
-    print 'Average Accuracy: %s' % str(sum_acc/size)
-    print 'Average Value: %s' % str(sum_val/size)
+    print 'Best Accuracy: %s\n%s' % (max_acc.accuracy, max_acc)
+    print 'Highest Value: %s\n%s' % (max_val.value, max_val)
+    print 
+    print 'Average Accuracy: %s' % (str(sum_acc/size),)
+    print 'Average Value: %s' % (str(sum_val/size),)
+
+    pprint.pprint(max_val.classifier.__dict__)
 
 
 def create_set(label_list):
@@ -118,6 +179,14 @@ def class_partitions(class_labels):
 
     return splits
 
+def get_optimal_classifier(approach, *args, **kwargs):
+    results = approach(*args, **kwargs)
+    optimal_result = results[0]
+    for result in results:
+        if result.value > optimal_result.value:
+            optimal_result = result
+
+    return optimal_result
 
 def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
     # Generates all possible 2-set eqipartitions from the class labels
@@ -161,9 +230,9 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
             clf = svm.SVC()
         clf.fit(twoclass_train_data, twoclass_train_label)
         #print clf
-        current_metric = Metrics(accuracy=clf.score(twoclass_test_data, twoclass_test_label), partition=partition)
+        resutl = Result(accuracy=clf.score(twoclass_test_data, twoclass_test_label), partition=partition)
 
-        results.append(current_metric)
+        results.append(result)
 
     return results
 
@@ -231,11 +300,12 @@ def pairwise_SVM_A1(test, train, class_labels):
             test_labels += [reverse_mapping[label]]*len(test[label])
 
         #print 'Testing the re-trained optimal partition, score:',
-        current_metric = Metrics(accuracy=clf.score(test_samples, test_labels),
-                                 partition=tuple(mapping.itervalues()))
+        result = Result(accuracy=clf.score(test_samples, test_labels),
+                                 partition=tuple(mapping.itervalues()),
+                                 classifier=clf)
 
-        print current_metric
-        results.append(current_metric)
+        #print result
+        results.append(result)
         count += 1
 
     return results
@@ -263,8 +333,21 @@ if __name__ == '__main__':
 
     #results = bruteforce_SVM(train, test, CLASS_LABELS, linear_kernel=True)
     #results = bruteforce_SVM(train, test, CLASS_LABELS, linear_kernel=False)
-    results = pairwise_SVM_A1(train, test, CLASS_LABELS)
+    #results = pairwise_SVM_A1(train, test, CLASS_LABELS)
+    #results = pairwise_SVM_recursive(train, test, CLASS_LABELS)
+    #print get_optimal_classifier(pairwise_SVM_A1, test, train, CLASS_LABELS)
 
-    pprint.pprint(results)
-    get_statistics(results)
+    x = TreeNode(train, CLASS_LABELS)
+    print x
+    #print test[6][0]
+    #print x.predict(test[6][0])
+    test_vectors = []
+    test_labels = []
+    for key in test.keys():
+        test_vectors += test[key]
+        test_labels += [key]*len(test[key])
+    x._score(test_vectors, test_labels)
+
+    #pprint.pprint(results)
+    #get_statistics(results)
 

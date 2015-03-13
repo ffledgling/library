@@ -9,6 +9,16 @@ TODO
 - [ ] figure out how to return the obtained classifier to the client via API call.
 - [ ] Plan a way to actually scale the library once it's done.
 
+Immediate TODO:
+
+- [ ] Work with larger dataset
+- [x] Added heirarchial tree structre
+- [ ] Increase margin by adding overlap
+- [ ] Figure out a way to extract params from trained classifier
+    - [x] sklearn's coef\_
+    - [x] sklearn's raw\_coef\_
+    - [ ] Figure out how to compress the array
+
 
 Sort of independent parts:
 
