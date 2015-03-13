@@ -61,6 +61,7 @@ class TreeNode(object):
         optimal = get_optimal_classifier(pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
 
         self.classifier = optimal.classifier
+        self.overlap = optimal.overlap
         self.accuracy = optimal.accuracy
         self.lkeys = optimal.partition[0]
         self.rkeys = optimal.partition[1]
@@ -73,7 +74,7 @@ class TreeNode(object):
 
 
     def __repr__(self):
-        s = ('%s -> (%s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.lchild), repr(self.rchild))).split('\n')
+        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlap),  repr(self.lchild), repr(self.rchild))).split('\n')
         return s[0] + '\n' + '\n'.join('\t' + string for string in s[1:])
 
     def predict(self, feature_vector):
@@ -110,7 +111,8 @@ def objective_function(accuracy=None, balance=None, overlap=None, margin=None):
     if balance:
         value *= balance
     if overlap:
-        value *= overlap
+        # Do not count overlap for now
+        value *= 1.0
     if margin:
         value *= margin
 
@@ -300,9 +302,16 @@ def pairwise_SVM_A1(test, train, class_labels):
             test_samples += test[label]
             test_labels += [reverse_mapping[label]]*len(test[label])
 
+
+        # Get overlap
+        overlap = {}
+        for key in class_labels:
+            overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
+
         #print 'Testing the re-trained optimal partition, score:',
         result = Result(accuracy=clf.score(test_samples, test_labels),
                                  partition=tuple(mapping.itervalues()),
+                                 overlap=overlap,
                                  classifier=clf)
 
         #print result

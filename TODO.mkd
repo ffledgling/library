@@ -5,7 +5,7 @@ TODO
     - [x] Equipartition the classes
     - [x] Take classes pairwise and treat then decide other classes accordingly
     - [ ] KNN
-- [ ] Obtain data set
+- [x] Obtain data set
 - [ ] figure out how to return the obtained classifier to the client via API call.
 - [ ] Plan a way to actually scale the library once it's done.
 
@@ -14,10 +14,16 @@ Immediate TODO:
 - [ ] Work with larger dataset
 - [x] Added heirarchial tree structre
 - [ ] Increase margin by adding overlap
+    - [x] Compute Overlap
+    - [ ] Merge per-class overlap into a single value
+    - [ ] How to use overlap to increase the accuracy
 - [ ] Figure out a way to extract params from trained classifier
     - [x] sklearn's coef\_
     - [x] sklearn's raw\_coef\_
     - [ ] Figure out how to compress the array
+- [ ] Add parallelism
+    - [ ] Single Machine
+    - [ ] Multimachine
 
 
 Sort of independent parts:
