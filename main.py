@@ -1,5 +1,12 @@
 import sklearn
 import sklearn.svm as svm
+from sklearn.qda import QDA
+from sklearn.lda import LDA
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.multiclass import OneVsRestClassifier
+
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -62,9 +69,20 @@ class TreeNode(object):
 
         self.classifier = optimal.classifier
         self.overlap = optimal.overlap
+        self.overlapping_classes = set(map(lambda y: y[0], filter(lambda x: x[1]!=0.0, optimal.overlap.iteritems())))
         self.accuracy = optimal.accuracy
+
         self.lkeys = optimal.partition[0]
         self.rkeys = optimal.partition[1]
+
+        print "Overlapping Classes %s" % self.overlapping_classes
+
+        if (self.lkeys | self.overlapping_classes) != class_labels:
+            self.lkeys = self.lkeys | self.overlapping_classes
+        if (self.rkeys | self.overlapping_classes) != class_labels:
+            self.rkeys = self.rkeys | self.overlapping_classes
+
+
         self.lchild = None
         self.rchild = None
         if len(self.lkeys) > 1:
@@ -74,7 +92,7 @@ class TreeNode(object):
 
 
     def __repr__(self):
-        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlap),  repr(self.lchild), repr(self.rchild))).split('\n')
+        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlapping_classes),  repr(self.lchild), repr(self.rchild))).split('\n')
         return s[0] + '\n' + '\n'.join('\t' + string for string in s[1:])
 
     def predict(self, feature_vector):
@@ -111,8 +129,8 @@ def objective_function(accuracy=None, balance=None, overlap=None, margin=None):
     if balance:
         value *= balance
     if overlap:
-        # Do not count overlap for now
-        value *= 1.0
+        value *= (1 - (sum((1 for x in filter(lambda x: x!=1.0, (overlap.values()))))/len(overlap)))
+        #value *= 1.0
     if margin:
         value *= margin
 
@@ -304,6 +322,7 @@ def pairwise_SVM_A1(test, train, class_labels):
 
 
         # Get overlap
+        # Greater the value of each overlap, the more it is.
         overlap = {}
         for key in class_labels:
             overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
@@ -358,6 +377,48 @@ if __name__ == '__main__':
         test_labels += [key]*len(test[key])
     x._score(test_vectors, test_labels)
 
+
+    # Baseline testing using different classifiers
+    train_data = []
+    train_labels = []
+    test_data = []
+    test_labels = []
+    for key in train.keys():
+        train_data += train[key]
+        train_labels += [key]*len(train[key])
+    for key in test.keys():
+        test_data += test[key]
+        test_labels += [key]*len(test[key])
+
+    clf_qda = QDA()
+    clf_lda = LDA()
+    clf_svc = svm.SVC()
+    clf_dtree = DecisionTreeClassifier()
+    clf_bayes = GaussianNB()
+    clf_rand_forest = RandomForestClassifier()
+    clf_ada_boost = AdaBoostClassifier()
+    clf_1vr = OneVsRestClassifier(svm.SVC())
+
+    clf_qda.fit(train_data, train_labels)
+    clf_lda.fit(train_data, train_labels)
+    clf_svc.fit(train_data, train_labels)
+    clf_dtree.fit(train_data, train_labels)
+    clf_bayes.fit(train_data, train_labels)
+    clf_rand_forest.fit(train_data, train_labels)
+    clf_ada_boost.fit(train_data, train_labels)
+    clf_1vr.fit(train_data, train_labels)
+
+
+    print ''
+    print 'Base Line accuraccies:'
+    print 'QDA: %s' % clf_qda.score(test_data, test_labels)
+    print 'LDA: %s' % clf_lda.score(test_data, test_labels)
+    print 'SVC: %s' % clf_svc.score(test_data, test_labels)
+    print 'DecisionTreeClassifier: %s' % clf_dtree.score(test_data, test_labels)
+    print 'RandomForestClassifier: %s' % clf_rand_forest.score(test_data, test_labels)
+    print 'GaussianNB: %s' % clf_bayes.score(test_data, test_labels)
+    print 'AdaBoostClassifier: %s' % clf_ada_boost.score(test_data, test_labels)
+    print 'One Vs. Rest: %s' % clf_1vr.score(test_data, test_labels)
     #pprint.pprint(results)
     #get_statistics(results)
 

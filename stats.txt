@@ -26,7 +26,7 @@ Highest Value: 0.995291655768
 Average Accuracy: 0.93825675008
 Average Value: 0.93825675008
 
-2015-13-11
+2015-03-13
 ==========
 
 Results with a well balanced tree, using 'value' as the split driver
@@ -78,3 +78,138 @@ set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.997925311203)
 			None
 Correctly labeled classes 1664/1797
 Accuracy: 0.925987757373
+
+2015-03-15
+==========
+
+Added overlap
+Added baseline checks.
+Tree uses only accuracy*balance
+
+Working with the partition: set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+Overlapping Classes set([])
+Working with the partition: set([8, 1, 2, 4, 6])
+Overlapping Classes set([1])
+Working with the partition: set([8, 1, 2])
+Overlapping Classes set([])
+Working with the partition: set([8, 1])
+Overlapping Classes set([1])
+Working with the partition: set([1, 4, 6])
+Overlapping Classes set([1])
+Working with the partition: set([1, 4])
+Overlapping Classes set([1])
+Working with the partition: set([1, 6])
+Overlapping Classes set([])
+Working with the partition: set([0, 9, 3, 5, 7])
+Overlapping Classes set([])
+Working with the partition: set([9, 3, 7])
+Overlapping Classes set([])
+Working with the partition: set([3, 7])
+Overlapping Classes set([])
+Working with the partition: set([0, 5])
+Overlapping Classes set([])
+set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.979253112033, set([]))
+	set([8, 1, 2, 4, 6]) -> (0.979338842975, set([1]))
+		set([8, 1, 2]) -> (1.0, set([]))
+			set([8, 1]) -> (0.958762886598, set([1]))
+				None
+				None
+			None
+		set([1, 4, 6]) -> (0.993150684932, set([1]))
+			set([1, 4]) -> (0.989795918367, set([1]))
+				None
+				None
+			set([1, 6]) -> (1.0, set([]))
+				None
+				None
+	set([0, 9, 3, 5, 7]) -> (0.995833333333, set([]))
+		set([9, 3, 7]) -> (0.986301369863, set([]))
+			None
+			set([3, 7]) -> (0.989795918367, set([]))
+				None
+				None
+		set([0, 5]) -> (1.0, set([]))
+			None
+			None
+Correctly labeled classes 1611/1797
+Accuracy: 0.896494156928
+
+Base Line accuraccies:
+QDA: 0.702838063439
+LDA: 0.938786867001
+SVC: 0.56204785754
+DecisionTreeClassifier: 0.856427378965
+RandomForestClassifier: 0.948247078464
+GaussianNB: 0.728992765721
+AdaBoostClassifier: 0.685587089594
+One Vs. Rest: 0.87979966611
+
+---------
+
+Objective function uses accuracy, balance and overlap
+
+Working with the partition: set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+Overlapping Classes set([0, 1])
+Working with the partition: set([0, 1, 4])
+Overlapping Classes set([1])
+Working with the partition: set([0, 4])
+Overlapping Classes set([])
+Working with the partition: set([0, 1, 2, 3, 5, 6, 7, 8, 9])
+Overlapping Classes set([])
+Working with the partition: set([1, 2, 3, 5, 6, 7, 8, 9])
+Overlapping Classes set([])
+Working with the partition: set([1, 5, 6, 7, 8, 9])
+Overlapping Classes set([1])
+Working with the partition: set([8, 1, 6])
+Overlapping Classes set([1])
+Working with the partition: set([8, 1])
+Overlapping Classes set([1])
+Working with the partition: set([1, 6])
+Overlapping Classes set([])
+Working with the partition: set([9, 1, 5, 7])
+Overlapping Classes set([])
+Working with the partition: set([9, 5, 7])
+Overlapping Classes set([])
+Working with the partition: set([9, 7])
+Overlapping Classes set([])
+Working with the partition: set([2, 3])
+Overlapping Classes set([])
+set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) -> (0.98132780083, set([0, 1]))
+	set([0, 1, 4]) -> (0.979310344828, set([1]))
+		set([0, 4]) -> (1.0, set([]))
+			None
+			None
+		None
+	set([0, 1, 2, 3, 5, 6, 7, 8, 9]) -> (0.997690531178, set([]))
+		None
+		set([1, 2, 3, 5, 6, 7, 8, 9]) -> (0.966321243523, set([]))
+			set([1, 5, 6, 7, 8, 9]) -> (0.98615916955, set([1]))
+				set([8, 1, 6]) -> (0.937931034483, set([1]))
+					set([8, 1]) -> (0.958762886598, set([1]))
+						None
+						None
+					set([1, 6]) -> (1.0, set([]))
+						None
+						None
+				set([9, 1, 5, 7]) -> (1.0, set([]))
+					set([9, 5, 7]) -> (1.0, set([]))
+						set([9, 7]) -> (0.979381443299, set([]))
+							None
+							None
+						None
+					None
+			set([2, 3]) -> (1.0, set([]))
+				None
+				None
+Correctly labeled classes 1652/1797
+Accuracy: 0.919309961046
+
+Base Line accuraccies:
+QDA: 0.702838063439
+LDA: 0.938786867001
+SVC: 0.56204785754
+DecisionTreeClassifier: 0.857540345019
+RandomForestClassifier: 0.946021146355
+GaussianNB: 0.728992765721
+AdaBoostClassifier: 0.685587089594
+One Vs. Rest: 0.87979966611
