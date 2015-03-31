@@ -15,6 +15,7 @@ import numpy as np
 import itertools
 import collections
 import pprint
+from multiprocessing import Pool, cpu_count
 
 class Class(object):
     # Assume that all samples in the class have same number of features
@@ -52,7 +53,7 @@ class Result(object):
 class TreeNode(object):
     def __init__(self, train, class_labels):
         # Assumes train is well shuffled/random/not-ordered
-        print 'Working with the partition: %s' % class_labels
+        #print 'Working with the partition: %s' % class_labels
         self.class_labels = class_labels
         self.subtrain = {}
         self.subtest = {}
@@ -75,7 +76,7 @@ class TreeNode(object):
         self.lkeys = optimal.partition[0]
         self.rkeys = optimal.partition[1]
 
-        print "Overlapping Classes %s" % self.overlapping_classes
+        #print "Overlapping Classes %s" % self.overlapping_classes
 
         if (self.lkeys | self.overlapping_classes) != class_labels:
             self.lkeys = self.lkeys | self.overlapping_classes
@@ -257,6 +258,64 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
 
     return results
 
+def _train_and_test(arg_tuple):
+    initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
+    clf = svm.LinearSVC()
+    # Train classifier based on initial two classes.
+    # extract data points from the train object, generate labels on the fly
+    clf.fit(train[initial_two[0]] + train[initial_two[1]],
+            [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
+
+    for label in remaining_labels:
+        score = clf.score(train[label], [0]*len(train[label]))
+        # This is interesting to print, and observe actual values
+        if score > 0.5:
+            mapping[0].add(label)
+        else:
+            mapping[1].add(label)
+
+    # Create a new SVC
+    clf = svm.LinearSVC()
+
+    # Formulate training set and labels
+    train_samples, train_labels = [], []
+    for label in mapping[0]:
+        train_samples += train[label]
+        train_labels += [0]*len(train[label])
+    for label in mapping[1]:
+        train_samples += train[label]
+        train_labels += [1]*len(train[label])
+
+    # Train the new SVC, based on decided split
+    clf.fit(train_samples, train_labels)
+
+    # Generate reverse mapping
+    reverse_mapping = {}
+    for binary_label, labels in mapping.items():
+        for label in labels:
+            reverse_mapping[label] = binary_label
+
+    # Test it
+    test_samples, test_labels = [], []
+    for label in class_labels:
+        test_samples += test[label]
+        test_labels += [reverse_mapping[label]]*len(test[label])
+
+
+    # Get overlap
+    # Greater the value of each overlap, the more it is.
+    overlap = {}
+    for key in class_labels:
+        overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
+
+    #print 'Testing the re-trained optimal partition, score:',
+    result = Result(accuracy=clf.score(test_samples, test_labels),
+                             partition=tuple(mapping.itervalues()),
+                             overlap=overlap,
+                             classifier=clf)
+
+    #results.append(result)
+    return result
 
 def pairwise_SVM_A1(test, train, class_labels):
     # Take pairwise classes
@@ -266,76 +325,22 @@ def pairwise_SVM_A1(test, train, class_labels):
     # do so until all classes are done.
     # Compute the accuracy on the training set, keep track of results, find best result
 
-    count = 0
     results = []
 
+
+    inputs = []
     # For every possible pair of classes
     for initial_two in itertools.combinations(class_labels, 2):
-        #print '#%s' % count
 
-        #print 'Initial Two labels of choice are:', initial_two
         remaining_labels = set(class_labels - set(initial_two))
-        #print 'remaining labels are: %s' % remaining_labels
         mapping = {0: {initial_two[0]}, 1: {initial_two[1]}}
-        clf = svm.LinearSVC()
-        # Train classifier based on initial two classes.
-        # extract data points from the train object, generate labels on the fly
-        clf.fit(train[initial_two[0]] + train[initial_two[1]],
-                [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
+        inputs.append((initial_two, remaining_labels, mapping, test, train, class_labels))
+    
+    #print inputs[0]
+    #print len(inputs)
+    pool = Pool(cpu_count())
+    results = pool.map(_train_and_test, inputs)
 
-        for label in remaining_labels:
-            score = clf.score(train[label], [0]*len(train[label]))
-            # This is interesting to print, and observe actual values
-            #print 'scoring (similarity to %s:' % initial_two[0], label, score
-            if score > 0.5:
-                mapping[0].add(label)
-            else:
-                mapping[1].add(label)
-        #print 'Optimal paritioning is:', mapping
-
-        # Create a new SVC
-        clf = svm.LinearSVC()
-
-        # Formulate training set and labels
-        train_samples, train_labels = [], []
-        for label in mapping[0]:
-            train_samples += train[label]
-            train_labels += [0]*len(train[label])
-        for label in mapping[1]:
-            train_samples += train[label]
-            train_labels += [1]*len(train[label])
-
-        # Train the new SVC, based on decided split
-        clf.fit(train_samples, train_labels)
-
-        # Generate reverse mapping
-        reverse_mapping = {}
-        for binary_label, labels in mapping.items():
-            for label in labels:
-                reverse_mapping[label] = binary_label
-
-        # Test it
-        test_samples, test_labels = [], []
-        for label in class_labels:
-            test_samples += test[label]
-            test_labels += [reverse_mapping[label]]*len(test[label])
-
-
-        # Get overlap
-        # Greater the value of each overlap, the more it is.
-        overlap = {}
-        for key in class_labels:
-            overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
-
-        #print 'Testing the re-trained optimal partition, score:',
-        result = Result(accuracy=clf.score(test_samples, test_labels),
-                                 partition=tuple(mapping.itervalues()),
-                                 overlap=overlap,
-                                 classifier=clf)
-
-        #print result
-        results.append(result)
-        count += 1
 
     return results
 
@@ -367,7 +372,7 @@ if __name__ == '__main__':
     #print get_optimal_classifier(pairwise_SVM_A1, test, train, CLASS_LABELS)
 
     x = TreeNode(train, CLASS_LABELS)
-    print x
+    #print x
     #print test[6][0]
     #print x.predict(test[6][0])
     test_vectors = []
@@ -376,49 +381,50 @@ if __name__ == '__main__':
         test_vectors += test[key]
         test_labels += [key]*len(test[key])
     x._score(test_vectors, test_labels)
+    print x
 
 
     # Baseline testing using different classifiers
-    train_data = []
-    train_labels = []
-    test_data = []
-    test_labels = []
-    for key in train.keys():
-        train_data += train[key]
-        train_labels += [key]*len(train[key])
-    for key in test.keys():
-        test_data += test[key]
-        test_labels += [key]*len(test[key])
+    ##train_data = []
+    ##train_labels = []
+    ##test_data = []
+    ##test_labels = []
+    ##for key in train.keys():
+    ##    train_data += train[key]
+    ##    train_labels += [key]*len(train[key])
+    ##for key in test.keys():
+    ##    test_data += test[key]
+    ##    test_labels += [key]*len(test[key])
 
-    clf_qda = QDA()
-    clf_lda = LDA()
-    clf_svc = svm.SVC()
-    clf_dtree = DecisionTreeClassifier()
-    clf_bayes = GaussianNB()
-    clf_rand_forest = RandomForestClassifier()
-    clf_ada_boost = AdaBoostClassifier()
-    clf_1vr = OneVsRestClassifier(svm.SVC())
+    ##clf_qda = QDA()
+    ##clf_lda = LDA()
+    ##clf_svc = svm.SVC()
+    ##clf_dtree = DecisionTreeClassifier()
+    ##clf_bayes = GaussianNB()
+    ##clf_rand_forest = RandomForestClassifier()
+    ##clf_ada_boost = AdaBoostClassifier()
+    ##clf_1vr = OneVsRestClassifier(svm.SVC())
 
-    clf_qda.fit(train_data, train_labels)
-    clf_lda.fit(train_data, train_labels)
-    clf_svc.fit(train_data, train_labels)
-    clf_dtree.fit(train_data, train_labels)
-    clf_bayes.fit(train_data, train_labels)
-    clf_rand_forest.fit(train_data, train_labels)
-    clf_ada_boost.fit(train_data, train_labels)
-    clf_1vr.fit(train_data, train_labels)
+    ##clf_qda.fit(train_data, train_labels)
+    ##clf_lda.fit(train_data, train_labels)
+    ##clf_svc.fit(train_data, train_labels)
+    ##clf_dtree.fit(train_data, train_labels)
+    ##clf_bayes.fit(train_data, train_labels)
+    ##clf_rand_forest.fit(train_data, train_labels)
+    ##clf_ada_boost.fit(train_data, train_labels)
+    ##clf_1vr.fit(train_data, train_labels)
 
 
-    print ''
-    print 'Base Line accuraccies:'
-    print 'QDA: %s' % clf_qda.score(test_data, test_labels)
-    print 'LDA: %s' % clf_lda.score(test_data, test_labels)
-    print 'SVC: %s' % clf_svc.score(test_data, test_labels)
-    print 'DecisionTreeClassifier: %s' % clf_dtree.score(test_data, test_labels)
-    print 'RandomForestClassifier: %s' % clf_rand_forest.score(test_data, test_labels)
-    print 'GaussianNB: %s' % clf_bayes.score(test_data, test_labels)
-    print 'AdaBoostClassifier: %s' % clf_ada_boost.score(test_data, test_labels)
-    print 'One Vs. Rest: %s' % clf_1vr.score(test_data, test_labels)
-    #pprint.pprint(results)
-    #get_statistics(results)
+    ##print ''
+    ##print 'Base Line accuraccies:'
+    ##print 'QDA: %s' % clf_qda.score(test_data, test_labels)
+    ##print 'LDA: %s' % clf_lda.score(test_data, test_labels)
+    ##print 'SVC: %s' % clf_svc.score(test_data, test_labels)
+    ##print 'DecisionTreeClassifier: %s' % clf_dtree.score(test_data, test_labels)
+    ##print 'RandomForestClassifier: %s' % clf_rand_forest.score(test_data, test_labels)
+    ##print 'GaussianNB: %s' % clf_bayes.score(test_data, test_labels)
+    ##print 'AdaBoostClassifier: %s' % clf_ada_boost.score(test_data, test_labels)
+    ##print 'One Vs. Rest: %s' % clf_1vr.score(test_data, test_labels)
+    ###pprint.pprint(results)
+    ###get_statistics(results)
 
