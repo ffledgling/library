@@ -23,6 +23,8 @@ Immediate TODO:
     - [ ] Figure out how to compress the array
 - [ ] Add parallelism
     - [ ] Single Machine
+        - [x] Initial Parallelisim
+        - [ ] Optimize
     - [ ] Multimachine
 
 
@@ -33,3 +35,5 @@ Sort of independent parts:
 2. Generating an optimized classifier.
 
 3. Returning the obtained classifer via an API call.
+
+4. Testing it with different datasets

@@ -15,9 +15,6 @@ import numpy as np
 import itertools
 import collections
 import pprint
-from multiprocessing import Pool, cpu_count
-import sys
-import time
 
 class Class(object):
     # Assume that all samples in the class have same number of features
@@ -55,7 +52,7 @@ class Result(object):
 class TreeNode(object):
     def __init__(self, train, class_labels):
         # Assumes train is well shuffled/random/not-ordered
-        #print 'Working with the partition: %s' % class_labels
+        print 'Working with the partition: %s' % class_labels
         self.class_labels = class_labels
         self.subtrain = {}
         self.subtest = {}
@@ -78,7 +75,7 @@ class TreeNode(object):
         self.lkeys = optimal.partition[0]
         self.rkeys = optimal.partition[1]
 
-        #print "Overlapping Classes %s" % self.overlapping_classes
+        print "Overlapping Classes %s" % self.overlapping_classes
 
         if (self.lkeys | self.overlapping_classes) != class_labels:
             self.lkeys = self.lkeys | self.overlapping_classes
@@ -185,7 +182,7 @@ def populate_dataset(dataset, filepath):
     with open(filepath, 'r') as f:
         for line in f:
             datum = line.rstrip().strip().split(',')
-            feature_vector, category = tuple([int(x) for x in datum[:-1]]), datum[-1]
+            feature_vector, category = tuple([int(x) for x in datum[:64]]), int(datum[64])
             dataset[category].append(feature_vector)
 
     return dataset
@@ -260,64 +257,6 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
 
     return results
 
-def _train_and_test(arg_tuple):
-    initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
-    clf = svm.LinearSVC()
-    # Train classifier based on initial two classes.
-    # extract data points from the train object, generate labels on the fly
-    clf.fit(train[initial_two[0]] + train[initial_two[1]],
-            [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
-
-    for label in remaining_labels:
-        score = clf.score(train[label], [0]*len(train[label]))
-        # This is interesting to print, and observe actual values
-        if score > 0.5:
-            mapping[0].add(label)
-        else:
-            mapping[1].add(label)
-
-    # Create a new SVC
-    clf = svm.LinearSVC()
-
-    # Formulate training set and labels
-    train_samples, train_labels = [], []
-    for label in mapping[0]:
-        train_samples += train[label]
-        train_labels += [0]*len(train[label])
-    for label in mapping[1]:
-        train_samples += train[label]
-        train_labels += [1]*len(train[label])
-
-    # Train the new SVC, based on decided split
-    clf.fit(train_samples, train_labels)
-
-    # Generate reverse mapping
-    reverse_mapping = {}
-    for binary_label, labels in mapping.items():
-        for label in labels:
-            reverse_mapping[label] = binary_label
-
-    # Test it
-    test_samples, test_labels = [], []
-    for label in class_labels:
-        test_samples += test[label]
-        test_labels += [reverse_mapping[label]]*len(test[label])
-
-
-    # Get overlap
-    # Greater the value of each overlap, the more it is.
-    overlap = {}
-    for key in class_labels:
-        overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
-
-    #print 'Testing the re-trained optimal partition, score:',
-    result = Result(accuracy=clf.score(test_samples, test_labels),
-                             partition=tuple(mapping.itervalues()),
-                             overlap=overlap,
-                             classifier=clf)
-
-    #results.append(result)
-    return result
 
 def pairwise_SVM_A1(test, train, class_labels):
     # Take pairwise classes
@@ -327,30 +266,77 @@ def pairwise_SVM_A1(test, train, class_labels):
     # do so until all classes are done.
     # Compute the accuracy on the training set, keep track of results, find best result
 
+    count = 0
     results = []
 
-
-    inputs = []
     # For every possible pair of classes
     for initial_two in itertools.combinations(class_labels, 2):
+        #print '#%s' % count
 
+        #print 'Initial Two labels of choice are:', initial_two
         remaining_labels = set(class_labels - set(initial_two))
+        #print 'remaining labels are: %s' % remaining_labels
         mapping = {0: {initial_two[0]}, 1: {initial_two[1]}}
-        inputs.append((initial_two, remaining_labels, mapping, test, train, class_labels))
-    
-    #print inputs[0]
-    print len(inputs)
-    print 'CPU Count: {}'.format(cpu_count())
-    #sys.exit(0)
+        clf = svm.LinearSVC()
+        # Train classifier based on initial two classes.
+        # extract data points from the train object, generate labels on the fly
+        clf.fit(train[initial_two[0]] + train[initial_two[1]],
+                [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
 
-    pool = Pool(2*cpu_count())
-    results = pool.map_async(_train_and_test, inputs)
-    while not results.ready():
-        print('Num left: {}'.format(results._number_left))
-        time.sleep(2)
-    results = results.get()
-    pool.close()
-    pool.join()
+        for label in remaining_labels:
+            score = clf.score(train[label], [0]*len(train[label]))
+            # This is interesting to print, and observe actual values
+            #print 'scoring (similarity to %s:' % initial_two[0], label, score
+            if score > 0.5:
+                mapping[0].add(label)
+            else:
+                mapping[1].add(label)
+        #print 'Optimal paritioning is:', mapping
+
+        # Create a new SVC
+        clf = svm.LinearSVC()
+
+        # Formulate training set and labels
+        train_samples, train_labels = [], []
+        for label in mapping[0]:
+            train_samples += train[label]
+            train_labels += [0]*len(train[label])
+        for label in mapping[1]:
+            train_samples += train[label]
+            train_labels += [1]*len(train[label])
+
+        # Train the new SVC, based on decided split
+        clf.fit(train_samples, train_labels)
+
+        # Generate reverse mapping
+        reverse_mapping = {}
+        for binary_label, labels in mapping.items():
+            for label in labels:
+                reverse_mapping[label] = binary_label
+
+        # Test it
+        test_samples, test_labels = [], []
+        for label in class_labels:
+            test_samples += test[label]
+            test_labels += [reverse_mapping[label]]*len(test[label])
+
+
+        # Get overlap
+        # Greater the value of each overlap, the more it is.
+        overlap = {}
+        for key in class_labels:
+            overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
+
+        #print 'Testing the re-trained optimal partition, score:',
+        result = Result(accuracy=clf.score(test_samples, test_labels),
+                                 partition=tuple(mapping.itervalues()),
+                                 overlap=overlap,
+                                 classifier=clf)
+
+        #print result
+        results.append(result)
+        count += 1
+
     return results
 
 
@@ -358,15 +344,9 @@ if __name__ == '__main__':
 
     # Do dataset specific things here in main
 
-    # Digit dataset
-    #TRAINING_DATA_PATH='optdigits/optdigits.tra'
-    #TESTING_DATA_PATH='optdigits/optdigits.tes'
-    #CLASS_LABELS = set(range(0,10)) # Class labels are b/w 0..9 (inclusive)
-
-    # Latin Letter Dataset
-    TRAINING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tra'
-    TESTING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tes'
-    CLASS_LABELS = set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+    TRAINING_DATA_PATH='optdigits/optdigits.tra'
+    TESTING_DATA_PATH='optdigits/optdigits.tes'
+    CLASS_LABELS = set(range(0,10)) # Class labels are b/w 0..9 (inclusive)
 
     # create training set
     train = create_set(CLASS_LABELS)
@@ -385,10 +365,9 @@ if __name__ == '__main__':
     #results = pairwise_SVM_A1(train, test, CLASS_LABELS)
     #results = pairwise_SVM_recursive(train, test, CLASS_LABELS)
     #print get_optimal_classifier(pairwise_SVM_A1, test, train, CLASS_LABELS)
-    #sys.exit(0)
 
     x = TreeNode(train, CLASS_LABELS)
-    #print x
+    print x
     #print test[6][0]
     #print x.predict(test[6][0])
     test_vectors = []
@@ -397,7 +376,6 @@ if __name__ == '__main__':
         test_vectors += test[key]
         test_labels += [key]*len(test[key])
     x._score(test_vectors, test_labels)
-    print x
 
 
     # Baseline testing using different classifiers
