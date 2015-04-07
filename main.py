@@ -1,16 +1,16 @@
 import sklearn
 import sklearn.svm as svm
-from sklearn.qda import QDA
-from sklearn.lda import LDA
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.multiclass import OneVsRestClassifier
+#from sklearn.qda import QDA
+#from sklearn.lda import LDA
+#from sklearn.tree import DecisionTreeClassifier
+#from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+#from sklearn.naive_bayes import GaussianNB
+#from sklearn.multiclass import OneVsRestClassifier
 
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import numpy as np
+#import matplotlib
+#import matplotlib.pyplot as plt
+#import matplotlib.cm as cm
+#import numpy as np
 
 import itertools
 import collections
@@ -264,8 +264,8 @@ def _train_and_test(arg_tuple):
     initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
     clf = svm.LinearSVC()
 
-    pprint.pprint('This is the test set being passed:')
-    pprint.pprint(map(lambda x: (x[0], len(x[1])), test.iteritems()))
+    #pprint.pprint('This is the test set being passed:')
+    #pprint.pprint(map(lambda x: (x[0], len(x[1])), test.iteritems()))
     # Train classifier based on initial two classes.
     # extract data points from the train object, generate labels on the fly
     clf.fit(train[initial_two[0]] + train[initial_two[1]],
@@ -312,7 +312,7 @@ def _train_and_test(arg_tuple):
     overlap = {}
     for key in class_labels:
         overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
-        print 'Key: %s: Score: %s' % (key, clf.score(test[key], [key]*len(test[key])))
+        #print 'Key: %s: Score: %s' % (key, clf.score(test[key], [key]*len(test[key])))
 
     #print 'Testing the re-trained optimal partition, score:',
     result = Result(accuracy=clf.score(test_samples, test_labels),
@@ -348,7 +348,7 @@ def pairwise_SVM_A1(test, train, class_labels):
     #sys.exit(0)
 
     pool = Pool(cpu_count())
-    results = pool.map_async(_train_and_test, inputs[0:2])
+    results = pool.map_async(_train_and_test, inputs)
     while not results.ready():
         print('Num left: {}'.format(results._number_left))
         time.sleep(2)
@@ -356,8 +356,8 @@ def pairwise_SVM_A1(test, train, class_labels):
     pool.close()
     pool.join()
 
-    print results
-    sys.exit(1)
+    #print results
+    #sys.exit(1)
 
     return results
 
