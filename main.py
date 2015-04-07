@@ -45,11 +45,16 @@ class Result(object):
         self.classifier = classifier
 
         self.balance = 2.0*min(len(partition[0]), len(partition[1]))/(len(partition[0]) + len(partition[1]))
-        self.value = objective_function(accuracy=self.accuracy, balance=self.balance, overlap=self.overlap, margin=self.margin)
+
+        self.overlapping_classes = set(map(lambda y: y[0], filter(lambda x: x[1]!=0.0, overlap.iteritems())))
+
+        self.overlap_value = 1 - (sum((1 for x in filter(lambda x: x!=0.0, (overlap.values()))))*1.0/len(overlap))
+        self.purity = 4.0*len(partition[0]-set(self.overlapping_classes))*len(partition[1]-set(self.overlapping_classes))/((len(partition[0] | partition[1]))**2)
+        self.value = objective_function(accuracy=self.accuracy, balance=self.balance, overlap=self.overlap, margin=self.margin, purity=self.purity)
 
     def __repr__(self):
-        return ('(Value: %s' ' Accuracy: %s, Balance: %s, Overlap: %s, Margin: %s, Partition: %s, Classifier: %s)'
-                % (repr(self.value),  repr(self.accuracy),  repr(self.balance),  repr(self.overlap),  repr(self.margin),  repr(self.partition), repr(self.classifier)))
+        return ('(Value: %s' ', Accuracy: %s, Balance: %s, Overlap: %s, Margin: %s, Purity: %s, Overlapping-Classes: %s, Overlap-value: %s, Partition: %s, Classifier: %s)'
+                % (repr(self.value),  repr(self.accuracy),  repr(self.balance),  repr(self.overlap),  repr(self.margin),  repr(self.purity), repr(self.overlapping_classes), repr(self.overlap_value), repr(self.partition), repr(self.classifier)))
 
 
 class TreeNode(object):
@@ -69,6 +74,8 @@ class TreeNode(object):
                 self.subtest[key] = train[key][l*7/8:]
 
         optimal = get_optimal_classifier(pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
+        print 'Optimal:'
+        pprint.pprint(optimal)
 
         self.classifier = optimal.classifier
         self.overlap = optimal.overlap
@@ -120,22 +127,24 @@ class TreeNode(object):
         print 'Accuracy: %s' % (1.0*len(correct)/len(predictions))
         
 
-def objective_function(accuracy=None, balance=None, overlap=None, margin=None):
+def objective_function(accuracy=None, balance=None, overlap=None, margin=None, purity=None):
     # Take all the different things we measure and create a single unifying function
     # use the value of this function to decide if something a good choice
     # Values returned should always be b/w 0 and 1.
 
     value = 1.0
 
-    if accuracy:
+    if accuracy is not None:
         value *= accuracy
-    if balance:
+    if balance is not None:
         value *= balance
     if overlap:
-        value *= (1 - (sum((1 for x in filter(lambda x: x!=1.0, (overlap.values()))))/len(overlap)))
+        value *= (1 - (sum((1 for x in filter(lambda x: x>=0.05, (overlap.values()))))/len(overlap)))
         #value *= 1.0
     if margin:
         value *= margin
+    if purity is not None:
+        value *= purity
 
     return value
 
@@ -204,6 +213,10 @@ def class_partitions(class_labels):
 
 def get_optimal_classifier(approach, *args, **kwargs):
     results = approach(*args, **kwargs)
+    print 'PRINTING ALL RESULTS'
+    pprint.pprint([x.value for x in results])
+    pprint.pprint(results)
+    print 'DONE.'
     optimal_result = results[0]
     for result in results:
         #if result.accuracy > optimal_result.accuracy:
