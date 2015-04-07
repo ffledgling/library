@@ -213,3 +213,65 @@ RandomForestClassifier: 0.946021146355
 GaussianNB: 0.728992765721
 AdaBoostClassifier: 0.685587089594
 One Vs. Rest: 0.87979966611
+
+----
+
+Parallel run on hand-written digit dataset
+
+Correctly labeled classes 1883/4000
+Accuracy: 0.47075
+set(['A', 'C', 'B', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'J', 'M', 'L', 'O', 'N', 'Q', 'P', 'S', 'R', 'U', 'T', 'W', 'V', 'Y', 'X', 'Z']) -> (0.689706613625, set([]))
+    set(['A', 'F', 'I', 'J', 'M', 'N', 'S', 'T', 'W', 'V', 'Y', 'X', 'Z']) -> (0.902874132805, set([]))
+        set(['A', 'W', 'V', 'Y', 'M', 'N']) -> (0.96218487395, set([]))
+            set(['A', 'Y', 'V']) -> (0.979166666667, set([]))
+                None
+                set(['Y', 'V']) -> (0.96875, set([]))
+                    None
+                    None
+            set(['M', 'W', 'N']) -> (0.974576271186, set([]))
+                set(['M', 'N']) -> (0.955974842767, set([]))
+                    None
+                    None
+                None
+        set(['S', 'Z', 'T', 'F', 'I', 'X', 'J']) -> (0.861163227017, set([]))
+            set(['I', 'S', 'J', 'T', 'F']) -> (0.913612565445, set([]))
+                set(['I', 'J', 'T', 'F']) -> (0.954545454545, set([]))
+                    set(['I', 'T', 'F']) -> (0.969957081545, set([]))
+                        None
+                        set(['T', 'F']) -> (0.930817610063, set([]))
+                            None
+                            None
+                    None
+                None
+            set(['X', 'Z']) -> (1.0, set([]))
+                None
+                None
+    set(['C', 'B', 'E', 'D', 'G', 'H', 'K', 'L', 'O', 'Q', 'P', 'R', 'U']) -> (0.908183632735, set([]))
+        set(['C', 'E', 'G', 'H', 'K', 'L', 'O', 'Q', 'U']) -> (0.938953488372, set([]))
+            set(['C', 'G', 'H', 'K', 'L', 'O', 'Q', 'U']) -> (0.833060556465, set([]))
+                set(['C', 'U', 'K']) -> (0.865800865801, set([]))
+                    set(['C', 'K']) -> (0.886666666667, set([]))
+                        None
+                        None
+                    None
+                set(['Q', 'H', 'O', 'L', 'G']) -> (0.910526315789, set([]))
+                    set(['Q', 'L', 'G']) -> (0.904347826087, set([]))
+                        None
+                        set(['L', 'G']) -> (0.941176470588, set([]))
+                            None
+                            None
+                    set(['H', 'O']) -> (0.726666666667, set([]))
+                        None
+                        None
+            None
+        set(['P', 'R', 'B', 'D']) -> (0.90127388535, set([]))
+            None
+            set(['B', 'R', 'D']) -> (0.918803418803, set([]))
+                set(['B', 'D']) -> (0.968553459119, set([]))
+                    None
+                    None
+                None
+
+real    325m51.080s
+user    22m38.424s
+sys     0m3.744s

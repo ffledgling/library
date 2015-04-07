@@ -72,7 +72,7 @@ class TreeNode(object):
 
         self.classifier = optimal.classifier
         self.overlap = optimal.overlap
-        self.overlapping_classes = set(map(lambda y: y[0], filter(lambda x: x[1]!=0.0, optimal.overlap.iteritems())))
+        self.overlapping_classes = set(map(lambda y: y[0], filter(lambda x: x[1]>=0.0001, optimal.overlap.iteritems())))
         self.accuracy = optimal.accuracy
 
         self.lkeys = optimal.partition[0]
@@ -95,7 +95,7 @@ class TreeNode(object):
 
 
     def __repr__(self):
-        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlapping_classes),  repr(self.lchild), repr(self.rchild))).split('\n')
+        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlap),  repr(self.lchild), repr(self.rchild))).split('\n')
         return s[0] + '\n' + '\n'.join('\t' + string for string in s[1:])
 
     def predict(self, feature_vector):
@@ -263,6 +263,9 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
 def _train_and_test(arg_tuple):
     initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
     clf = svm.LinearSVC()
+
+    pprint.pprint('This is the test set being passed:')
+    pprint.pprint(map(lambda x: (x[0], len(x[1])), test.iteritems()))
     # Train classifier based on initial two classes.
     # extract data points from the train object, generate labels on the fly
     clf.fit(train[initial_two[0]] + train[initial_two[1]],
@@ -309,6 +312,7 @@ def _train_and_test(arg_tuple):
     overlap = {}
     for key in class_labels:
         overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
+        print 'Key: %s: Score: %s' % (key, clf.score(test[key], [key]*len(test[key])))
 
     #print 'Testing the re-trained optimal partition, score:',
     result = Result(accuracy=clf.score(test_samples, test_labels),
@@ -343,14 +347,18 @@ def pairwise_SVM_A1(test, train, class_labels):
     print 'CPU Count: {}'.format(cpu_count())
     #sys.exit(0)
 
-    pool = Pool(2*cpu_count())
-    results = pool.map_async(_train_and_test, inputs)
+    pool = Pool(cpu_count())
+    results = pool.map_async(_train_and_test, inputs[0:2])
     while not results.ready():
         print('Num left: {}'.format(results._number_left))
         time.sleep(2)
     results = results.get()
     pool.close()
     pool.join()
+
+    print results
+    sys.exit(1)
+
     return results
 
 
@@ -359,14 +367,15 @@ if __name__ == '__main__':
     # Do dataset specific things here in main
 
     # Digit dataset
-    #TRAINING_DATA_PATH='optdigits/optdigits.tra'
-    #TESTING_DATA_PATH='optdigits/optdigits.tes'
+    TRAINING_DATA_PATH='optdigits/optdigits.tra'
+    TESTING_DATA_PATH='optdigits/optdigits.tes'
     #CLASS_LABELS = set(range(0,10)) # Class labels are b/w 0..9 (inclusive)
+    CLASS_LABELS = set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
     # Latin Letter Dataset
-    TRAINING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tra'
-    TESTING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tes'
-    CLASS_LABELS = set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+    #TRAINING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tra'
+    #TESTING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tes'
+    #CLASS_LABELS = set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
 
     # create training set
     train = create_set(CLASS_LABELS)
@@ -388,9 +397,7 @@ if __name__ == '__main__':
     #sys.exit(0)
 
     x = TreeNode(train, CLASS_LABELS)
-    #print x
-    #print test[6][0]
-    #print x.predict(test[6][0])
+    print x
     test_vectors = []
     test_labels = []
     for key in test.keys():
@@ -434,13 +441,16 @@ if __name__ == '__main__':
     ##print ''
     ##print 'Base Line accuraccies:'
     ##print 'QDA: %s' % clf_qda.score(test_data, test_labels)
+    ##print clf_svc.__dict__
     ##print 'LDA: %s' % clf_lda.score(test_data, test_labels)
+    ##print clf_svc.__dict__
     ##print 'SVC: %s' % clf_svc.score(test_data, test_labels)
-    ##print 'DecisionTreeClassifier: %s' % clf_dtree.score(test_data, test_labels)
+    ##print clf_svc.__dict__
+    ###print 'DecisionTreeClassifier: %s' % clf_dtree.score(test_data, test_labels)
     ##print 'RandomForestClassifier: %s' % clf_rand_forest.score(test_data, test_labels)
     ##print 'GaussianNB: %s' % clf_bayes.score(test_data, test_labels)
     ##print 'AdaBoostClassifier: %s' % clf_ada_boost.score(test_data, test_labels)
     ##print 'One Vs. Rest: %s' % clf_1vr.score(test_data, test_labels)
-    ###pprint.pprint(results)
-    ###get_statistics(results)
+    #pprint.pprint(results)
+    #get_statistics(results)
 
