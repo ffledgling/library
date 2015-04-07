@@ -72,7 +72,7 @@ class TreeNode(object):
 
         self.classifier = optimal.classifier
         self.overlap = optimal.overlap
-        self.overlapping_classes = set(map(lambda y: y[0], filter(lambda x: x[1]>=0.0001, optimal.overlap.iteritems())))
+        self.overlapping_classes = set(map(lambda y: y[0], filter(lambda x: x[1]!=0.0, optimal.overlap.iteritems())))
         self.accuracy = optimal.accuracy
 
         self.lkeys = optimal.partition[0]
@@ -95,7 +95,7 @@ class TreeNode(object):
 
 
     def __repr__(self):
-        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlap),  repr(self.lchild), repr(self.rchild))).split('\n')
+        s = ('%s -> (%s, %s)\n%s\n%s' % (self.class_labels, self.accuracy, repr(self.overlapping_classes),  repr(self.lchild), repr(self.rchild))).split('\n')
         return s[0] + '\n' + '\n'.join('\t' + string for string in s[1:])
 
     def predict(self, feature_vector):
@@ -311,7 +311,7 @@ def _train_and_test(arg_tuple):
     # Greater the value of each overlap, the more it is.
     overlap = {}
     for key in class_labels:
-        overlap[key] = 0.5 - abs(clf.score(test[key], [key]*len(test[key])) - 0.5)
+        overlap[key] = 0.5 - abs(clf.score(test[key], [reverse_mapping[key]]*len(test[key])) - 0.5)
         #print 'Key: %s: Score: %s' % (key, clf.score(test[key], [key]*len(test[key])))
 
     #print 'Testing the re-trained optimal partition, score:',
@@ -397,7 +397,7 @@ if __name__ == '__main__':
     #sys.exit(0)
 
     x = TreeNode(train, CLASS_LABELS)
-    print x
+    #print x
     test_vectors = []
     test_labels = []
     for key in test.keys():
