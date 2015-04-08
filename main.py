@@ -1,16 +1,5 @@
 import sklearn
 import sklearn.svm as svm
-#from sklearn.qda import QDA
-#from sklearn.lda import LDA
-#from sklearn.tree import DecisionTreeClassifier
-#from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-#from sklearn.naive_bayes import GaussianNB
-#from sklearn.multiclass import OneVsRestClassifier
-
-#import matplotlib
-#import matplotlib.pyplot as plt
-#import matplotlib.cm as cm
-#import numpy as np
 
 import itertools
 import collections
@@ -18,6 +7,7 @@ import pprint
 from multiprocessing import Pool, cpu_count
 import sys
 import time
+
 
 class Class(object):
     # Assume that all samples in the class have same number of features
@@ -60,7 +50,6 @@ class Result(object):
 class TreeNode(object):
     def __init__(self, train, class_labels):
         # Assumes train is well shuffled/random/not-ordered
-        #print 'Working with the partition: %s' % class_labels
         self.class_labels = class_labels
         self.subtrain = {}
         self.subtest = {}
@@ -84,8 +73,6 @@ class TreeNode(object):
 
         self.lkeys = optimal.partition[0]
         self.rkeys = optimal.partition[1]
-
-        #print "Overlapping Classes %s" % self.overlapping_classes
 
         if (self.lkeys | self.overlapping_classes) != class_labels:
             self.lkeys = self.lkeys | self.overlapping_classes
@@ -219,7 +206,6 @@ def get_optimal_classifier(approach, *args, **kwargs):
     print 'DONE.'
     optimal_result = results[0]
     for result in results:
-        #if result.accuracy > optimal_result.accuracy:
         if result.value > optimal_result.value:
             optimal_result = result
 
@@ -235,7 +221,6 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
 
     for count, partition in enumerate(partition_list):
         partition = tuple(partition)
-        print '#', count
         twoclass_train_data = []
         twoclass_train_label = []
         twoclass_test_data = []
@@ -266,7 +251,6 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
         else:
             clf = svm.SVC()
         clf.fit(twoclass_train_data, twoclass_train_label)
-        #print clf
         resutl = Result(accuracy=clf.score(twoclass_test_data, twoclass_test_label), partition=partition)
 
         results.append(result)
@@ -277,8 +261,6 @@ def _train_and_test(arg_tuple):
     initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
     clf = svm.LinearSVC()
 
-    #pprint.pprint('This is the test set being passed:')
-    #pprint.pprint(map(lambda x: (x[0], len(x[1])), test.iteritems()))
     # Train classifier based on initial two classes.
     # extract data points from the train object, generate labels on the fly
     clf.fit(train[initial_two[0]] + train[initial_two[1]],
@@ -286,7 +268,6 @@ def _train_and_test(arg_tuple):
 
     for label in remaining_labels:
         score = clf.score(train[label], [0]*len(train[label]))
-        # This is interesting to print, and observe actual values
         if score > 0.5:
             mapping[0].add(label)
         else:
@@ -325,15 +306,11 @@ def _train_and_test(arg_tuple):
     overlap = {}
     for key in class_labels:
         overlap[key] = 0.5 - abs(clf.score(test[key], [reverse_mapping[key]]*len(test[key])) - 0.5)
-        #print 'Key: %s: Score: %s' % (key, clf.score(test[key], [key]*len(test[key])))
 
-    #print 'Testing the re-trained optimal partition, score:',
     result = Result(accuracy=clf.score(test_samples, test_labels),
                              partition=tuple(mapping.itervalues()),
                              overlap=overlap,
                              classifier=clf)
-
-    #results.append(result)
     return result
 
 def pairwise_SVM_A1(test, train, class_labels):
@@ -355,10 +332,8 @@ def pairwise_SVM_A1(test, train, class_labels):
         mapping = {0: {initial_two[0]}, 1: {initial_two[1]}}
         inputs.append((initial_two, remaining_labels, mapping, test, train, class_labels))
     
-    #print inputs[0]
     print len(inputs)
     print 'CPU Count: {}'.format(cpu_count())
-    #sys.exit(0)
 
     pool = Pool(cpu_count())
     results = pool.map_async(_train_and_test, inputs)
@@ -368,9 +343,6 @@ def pairwise_SVM_A1(test, train, class_labels):
     results = results.get()
     pool.close()
     pool.join()
-
-    #print results
-    #sys.exit(1)
 
     return results
 
@@ -392,15 +364,11 @@ if __name__ == '__main__':
 
     # create training set
     train = create_set(CLASS_LABELS)
-    #pprint.pprint(train)
     populate_dataset(train, TRAINING_DATA_PATH)
-    #pprint.pprint(train)
 
     # create testing set
     test = create_set(CLASS_LABELS)
-    #pprint.pprint(train)
     populate_dataset(test, TESTING_DATA_PATH)
-    #pprint.pprint(train)
 
     #results = bruteforce_SVM(train, test, CLASS_LABELS, linear_kernel=True)
     #results = bruteforce_SVM(train, test, CLASS_LABELS, linear_kernel=False)
@@ -410,7 +378,6 @@ if __name__ == '__main__':
     #sys.exit(0)
 
     x = TreeNode(train, CLASS_LABELS)
-    #print x
     test_vectors = []
     test_labels = []
     for key in test.keys():
@@ -418,52 +385,3 @@ if __name__ == '__main__':
         test_labels += [key]*len(test[key])
     x._score(test_vectors, test_labels)
     print x
-
-
-    # Baseline testing using different classifiers
-    ##train_data = []
-    ##train_labels = []
-    ##test_data = []
-    ##test_labels = []
-    ##for key in train.keys():
-    ##    train_data += train[key]
-    ##    train_labels += [key]*len(train[key])
-    ##for key in test.keys():
-    ##    test_data += test[key]
-    ##    test_labels += [key]*len(test[key])
-
-    ##clf_qda = QDA()
-    ##clf_lda = LDA()
-    ##clf_svc = svm.SVC()
-    ##clf_dtree = DecisionTreeClassifier()
-    ##clf_bayes = GaussianNB()
-    ##clf_rand_forest = RandomForestClassifier()
-    ##clf_ada_boost = AdaBoostClassifier()
-    ##clf_1vr = OneVsRestClassifier(svm.SVC())
-
-    ##clf_qda.fit(train_data, train_labels)
-    ##clf_lda.fit(train_data, train_labels)
-    ##clf_svc.fit(train_data, train_labels)
-    ##clf_dtree.fit(train_data, train_labels)
-    ##clf_bayes.fit(train_data, train_labels)
-    ##clf_rand_forest.fit(train_data, train_labels)
-    ##clf_ada_boost.fit(train_data, train_labels)
-    ##clf_1vr.fit(train_data, train_labels)
-
-
-    ##print ''
-    ##print 'Base Line accuraccies:'
-    ##print 'QDA: %s' % clf_qda.score(test_data, test_labels)
-    ##print clf_svc.__dict__
-    ##print 'LDA: %s' % clf_lda.score(test_data, test_labels)
-    ##print clf_svc.__dict__
-    ##print 'SVC: %s' % clf_svc.score(test_data, test_labels)
-    ##print clf_svc.__dict__
-    ###print 'DecisionTreeClassifier: %s' % clf_dtree.score(test_data, test_labels)
-    ##print 'RandomForestClassifier: %s' % clf_rand_forest.score(test_data, test_labels)
-    ##print 'GaussianNB: %s' % clf_bayes.score(test_data, test_labels)
-    ##print 'AdaBoostClassifier: %s' % clf_ada_boost.score(test_data, test_labels)
-    ##print 'One Vs. Rest: %s' % clf_1vr.score(test_data, test_labels)
-    #pprint.pprint(results)
-    #get_statistics(results)
-
