@@ -1,0 +1,53 @@
+h1 {
+    text-align: center;
+    color: white;
+}
+#tree-container {
+    width: 1000px;
+    height: 600px;
+    margin: 0 auto;
+}
+
+body {
+    background: #2c3e50;
+}
+
+#info-container {
+    width: 600px;
+    height: 200px;
+    margin: auto;
+    background: #34495e;
+    color: white;
+    padding: 20px;
+}
+
+.container {
+}
+
+.link {
+    fill: None;
+    stroke: #ecf0f1;
+    stroke-width: 4px;
+}
+
+.node {
+    width: 10px;
+    height: 10px;
+}
+
+.node-dot {
+    fill: #f1c40f;
+    stroke: black;
+    stroke-width:2px;
+}
+
+.text-label {
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+.container-label {
+    font-size: 16px;
+    font-family: sans-serif;
+}

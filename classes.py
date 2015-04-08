@@ -77,10 +77,21 @@ class TreeNode(object):
 
         self.lchild = None
         self.rchild = None
+
+        # Logging for progress
+        print 'PROG: %s' % class_labels #PROG
+
+        # left child
         if len(self.lkeys) > 1:
            self.lchild = TreeNode(train, self.lkeys)
+        else:
+            print 'PROG: %s' % self.lkeys #PROG
+
+        # right child
         if len(self.rkeys) > 1:
            self.rchild = TreeNode(train, self.rkeys)
+        else:
+            print 'PROG: %s' % self.rkeys #PROG
 
 
     def __repr__(self):
