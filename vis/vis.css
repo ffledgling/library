@@ -40,6 +40,10 @@ body {
     stroke: black;
     stroke-width:2px;
 }
+.node-dot:hover {
+    fill: #9b59b6;
+    stroke: white;
+}
 
 .text-label {
     font-size: 16px;
@@ -50,4 +54,30 @@ body {
 .container-label {
     font-size: 16px;
     font-family: sans-serif;
+}
+
+table {
+    border: 2px solid #bdc3c7;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.th {
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: bold;
+    width: 25%;
+    text-align: right;
+    border: 2px solid #bdc3c7;
+    padding: 5px;
+    color: white;
+}
+
+.td {
+    font-size: 16px;
+    font-family: sans-serif;
+    text-align: left;
+    border: 2px solid #bdc3c7;
+    padding: 5px;
+    color: white;
 }
