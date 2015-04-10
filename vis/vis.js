@@ -1,174 +1,74 @@
 // Enable strict mode
-//"use strict";
+"use strict";
 
-var raw_data = [
-['1','0','3','2','5','4','7','6','9','8'], 
-['1','3','2','4','7','6','9','8'], 
-['1','3','2','7','6','9','8'], 
-['1','3','2','7','9','8'], 
-['9','3','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['3','7'], 
-['3'], 
-['7'], 
-['1','2','7','9','8'], 
-['9','2','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['2'], 
-['1','7','9','8'], 
-['1','8','7'], 
-['1'], 
-['8','7'], 
-['8'], 
-['7'], 
-['9','8','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['8'], 
-['1','2','6','8'], 
-['1','8','2'], 
-['1','8'], 
-['1'], 
-['8'], 
-['2'], 
-['6'], 
-['1','2','4','7','6'], 
-['1','2','4','7'], 
-['1','4','7'], 
-['1','7'], 
-['1'], 
-['7'], 
-['4','7'], 
-['4'], 
-['7'], 
-['2','7'], 
-['2'], 
-['7'], 
-['6'], 
-['1','0','3','2','5','7','9','8'], 
-['1','3','2','5','7','9','8'], 
-['1','3','2','5','7','9'], 
-['1','9','3','2','7'], 
-['1'], 
-['9','3','2','7'], 
-['9','3','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['3','7'], 
-['3'], 
-['7'], 
-['2','7'], 
-['2'], 
-['7'], 
-['9','5','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['5'], 
-['1','2','7','9','8'], 
-['9','2','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['2'], 
-['1','7','9','8'], 
-['1','8','7'], 
-['1'], 
-['8','7'], 
-['8'], 
-['7'], 
-['9','8','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['8'], 
-['1','0','2','7','9','8'], 
-['1','9','2','7','8'], 
-['9','2','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['2'], 
-['1','7','9','8'], 
-['1','8','7'], 
-['1'], 
-['8','7'], 
-['8'], 
-['7'], 
-['9','8','7'], 
-['9','7'], 
-['9'], 
-['7'], 
-['8'], 
-['0'], 
-];
+// NOTE: This library uses d3.v3.js which is included in the main HTML file
 
+/* Generic helper methods and classes here */
 function Exception(string) {
+    // Exception for general use
     this.string = string;
 }
 
-function Node(labels) {
-    this.labels = null;
+
+/* Tree specific classes and methods */
+
+function Node(data) {
+    // Node Object
+    // data.labels should never be null...
+    this.labels = data.labels;
+
+    // The data we really want
+    this.l_labels = data.lpart || null;
+    this.l_pure = data.lpure || null;
+
+    this.r_labels = data.rpart || null;
+    this.r_pure = data.rpure || null;
+
+    this.overlap = data.overlap || null;
+    this.accuracy = data.accuracy || null;
+
+    // Actual object based children
     this.left = null;
     this.right = null;
-    this.l_labels = null;
-    this.r_labels = null;
-    this.overlap = null;
-
-    if (typeof labels !== undefined) {
-        this.labels = labels
-    }
 };
 
-function ConstructTree(raw_data) {
-    var label_list = null;
-    if(raw_data.length === 0) {
+function ConstructTree(dataList) {
+    // Method to create the tree. Recursive.
+    var nodeData = null;
+    if(dataList.length === 0) {
+        // Nothing left in the list
         console.log('We\'re Done');
+        return null;
     } else {
-        label_list = raw_data.shift();
+        nodeData = dataList.shift();
     }
 
-    //console.log(label_list);
+    var root = new Node(nodeData);
 
-    var root = new Node(label_list);
-
-    //console.log(root);
-
-    
-    if(label_list.length === 1) {
+    if(root.labels.length === 1) {
         // Then we are a leaf node;
         //console.log('Leaf');
         return root;
     } else {
         //console.log('Intermediate');
         // We just create and push to the left node
-        root.left = ConstructTree(raw_data);
+        root.left = ConstructTree(dataList);
         // Then do the same for the right
-        root.right = ConstructTree(raw_data);
+        root.right = ConstructTree(dataList);
 
         return root;
     }
 };
 
-var tree = ConstructTree(raw_data);
-console.log(tree);
-
-// Node specific stuff
-//var util = require('util');
-//console.log(util.inspect(tree, {showHidden: false, depth: null}));
+/* D3 visualsation bits go here */
 
 var size = {
-    height: '600',
-    width: '1000',
-    circle_radius: 10,
+    height: 600,
+    width: 1000,
     padding: 20,
-};
+    radius: 10,
+    transition: 500,
+}
 
 var d3tree = d3.layout.tree()
     .sort(null)
@@ -177,66 +77,136 @@ var d3tree = d3.layout.tree()
         if(d.left === null && d.right === null) {
             return null;
         } else {
-            return [d.left, d.right];
+            var kids = [];
+            if(d.left) {
+               kids.push(d.left);
+            }
+            if(d.right) {
+                kids.push(d.right);
+            }
+            return kids;
         }
     });
 
-var nodes = d3tree.nodes(tree);
-var links = d3tree.links(nodes);
-
-// var layout = d3.select('body')
-//      .append("svg:svg").attr("width", size.width).attr("height", size.height)
-//      .append("svg:g")
-//      .attr("class", "container");
-var layout = d3.select('#tree-container')
-     .append("svg:svg")
-     .attr("width", size.width)
-     .attr("height", size.height);
+var svg = d3.select('#tree-container')
+    .append('svg:svg')
+    .attr('width', size.width)
+    .attr('height', size.height);
 
 var link = d3.svg.diagonal()
     .projection(function(d) {
-        return [d.x, d.y];
+        return [d.x + size.padding, d.y + size.padding]; // Is this necessary?
     });
 
-var linkgroup = layout.selectAll('path.link')
-    .data(links)
-    .enter()
-    .append('svg:path')
-    .attr('class', 'link')
-    .attr('d', link)
-    .attr('transform', function(d) {
-        return 'translate(' + size.padding + ',' + size.padding + ')';
-    });
+function update(treeData) {
+    var nodes = d3tree.nodes(treeData);
+    var links = d3tree.links(nodes);
+    //console.log(nodes);
+    //console.log(links);
 
-var nodeGroup = layout.selectAll('g.node')
-    .data(nodes)
-    .enter()
-    .append('avg:g')
-    .attr('class', 'node')
-    .attr('transform', function(d) {
-        return 'translate(' + (d.x + size.padding) + ',' + (d.y + size.padding) + ')';
-    })
-    .on('mouseover', function(d) {
-        d3.select('#labels')
-            .html(d.labels);
-        d3.select('#lchild')
-            .html(d.l_labels);
-        d3.select('#rchild')
-            .html(d.r_labels);
-        d3.select('#overlap')
-            .html(d.overlap);
-    })
-    .on('mouseout', function(d) {
-        d3.select('#labels')
-            .html('');
-        d3.select('#lchild')
-            .html('');
-        d3.select('#rchild')
-            .html('');
-        d3.select('#overlap')
-            .html('');
-    });
+    var linkGroup = svg.selectAll('path.link')
+        .data(links);
 
-nodeGroup.append('svg:circle')
-    .attr('class', 'node-dot')
-    .attr('r', size.circle_radius);
+
+    // Move old links to new positions
+    linkGroup.transition()
+        .duration(size.transition)
+        .attr('d', link)
+        .call(function() {
+            // Add the new links
+            var newLinksGroup = linkGroup.enter()
+                .insert('svg:path', '.node')
+                .attr('class', 'link')
+                .attr('d', function(d) {
+                    var o = {x: d.source.x, y: d.source.y};
+                    return link({source: o, target: o});
+                })
+                .transition()
+                .delay(size.transition)
+                .duration(size.transition)
+                .attr('d', link);
+        });
+
+    var nodeGroup = svg.selectAll('g.node')
+        .data(nodes);
+
+
+    // Move the old nodes to their new positions
+    nodeGroup.transition()
+        .duration(size.transition)
+        .attr('transform', function(d) {
+            return 'translate(' + (d.x + size.padding) + ',' + (d.y + size.padding) + ')';
+        })
+        .call(function() {
+            // Add nodes to the vis
+            var newNodesGroup = nodeGroup.enter()
+                .append('svg:g')
+                .attr('class', 'node')
+                .attr('transform', function(d) {
+                    var initx = null;
+                    var inity = null;
+
+                    if(!d.parent) {
+                        initx = d.x + size.padding;
+                        inity = d.y + size.padding;
+                    } else {
+                        initx = d.parent.x + size.padding;
+                        inity = d.parent.y + size.padding;
+                    }
+                    return 'translate(' + initx + ',' + inity + ')';
+                });
+
+            newNodesGroup.transition()
+                .delay(size.transition)
+                .duration(size.transition)
+                .attr('transform', function(d) {
+                    return 'translate(' + (d.x + size.padding) + ',' + (d.y + size.padding) + ')';
+                });
+
+
+            newNodesGroup.append('svg:circle')
+                .attr('class', 'node-dot')
+                .attr('r', 0)
+                .transition()
+                .delay(size.transition)
+                .duration(size.transition)
+                .attr('r', size.radius);
+        });
+}
+
+
+/* Polling and related bits */
+
+function pollHandler(error, contents) {
+    if (error) {
+        console.log('Could not fetch data, retrying in 10 seconds...');
+    } else {
+        data = contents.toString().split('\n')
+            .filter(function(v) {
+                // filter out empty strings/blank lines
+                return v.length > 0
+            })
+            .map(JSON.parse);
+        var tree = ConstructTree(data);
+        update(tree);
+    }
+};
+
+// Should this be global/ near global?
+var data = null;
+
+function poller() {
+    // Poll handling function
+    d3.text('./live.json', pollHandler);
+    setTimeout(poller, 5000);
+};
+
+// Kick everything off
+poller();
+
+
+/* Node specific stuff */
+    //var util = require('util');
+    //var fs = require('fs');
+    //console.log(util.inspect(tree, {showHidden: false, depth: null}));
+    //fs.readFile('myfile', callbackFunc);

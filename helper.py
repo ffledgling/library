@@ -1,5 +1,8 @@
 import itertools
 import pprint
+import json
+
+import config
 
 def create_set(label_list):
     # This is a horrible misnomer
@@ -76,3 +79,23 @@ def get_statistics(results):
     print 'Average Value: %s' % (str(sum_val/size),)
 
     pprint.pprint(max_val.classifier.__dict__)
+
+def log_format(labels, lpart=None, rpart=None, overlap=None, accuracy=None, classifier=None):
+    data = {}
+    data['labels'] = list(sorted( labels ))
+    if lpart:
+        data['lpart'] = list(sorted( lpart))
+        data['lpure'] = list(sorted( lpart - overlap ))
+    if rpart:
+        data['rpart'] = list(sorted( rpart ))
+        data['rpure'] = list(sorted( rpart - overlap ))
+    if overlap:
+        data['overlap'] = list(sorted( overlap ))
+    if accuracy is not None:
+        data['accuracy'] = '{:.4f}'.format(accuracy)
+    if classifier:
+        data['classifier'] = list(sorted( classifier ))
+
+    with open(config.FILENAME, 'a') as f:
+        f.write(json.dumps(data)+'\n')
+    return json.dumps(data)

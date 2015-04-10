@@ -80,18 +80,21 @@ class TreeNode(object):
 
         # Logging for progress
         print 'PROG: %s' % class_labels #PROG
+        helper.log_format(class_labels, self.lkeys, self.rkeys, self.overlapping_classes, self.accuracy)
 
         # left child
         if len(self.lkeys) > 1:
            self.lchild = TreeNode(train, self.lkeys)
         else:
             print 'PROG: %s' % self.lkeys #PROG
+            print helper.log_format(self.lkeys)
 
         # right child
         if len(self.rkeys) > 1:
            self.rchild = TreeNode(train, self.rkeys)
         else:
             print 'PROG: %s' % self.rkeys #PROG
+            print helper.log_format(self.rkeys)
 
 
     def __repr__(self):

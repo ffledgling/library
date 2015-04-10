@@ -1,0 +1,28 @@
+<html>
+<head>
+    <meta charset='utf-8' />
+    <script type='text/javascript' src='./d3.v3.js'></script>
+</head>
+<body>
+    <h1> Testing dynamically loaded data </h1>
+    <script type='text/javascript' src='./d3.v3.js'></script>
+    <script type='text/javascript'>
+        var data = null;
+        function f() {
+            d3.text('live.json', function(error, json) {
+                    if (error) {
+                        console.log('Could not fetch data');
+                    } else {
+                        data = json;
+                        d3.select('#data-div')
+                        .html(data);
+                    }
+                console.log(data);
+                setTimeout(f, 10000);
+            });
+        };
+        f();
+    </script>
+    <div id='data-div'></div>
+</body>
+</html>
