@@ -58,8 +58,8 @@ class TreeNode(object):
                 self.subtest[key] = train[key][l*7/8:]
 
         optimal = helper.get_optimal_classifier(approaches.pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
-        print 'Optimal:'
-        pprint.pprint(optimal)
+        #print 'Optimal:'
+        #pprint.pprint(optimal)
 
         self.classifier = optimal.classifier
         self.overlap = optimal.overlap
@@ -79,22 +79,22 @@ class TreeNode(object):
         self.rchild = None
 
         # Logging for progress
-        print 'PROG: %s' % class_labels #PROG
+        #print 'PROG: %s' % class_labels #PROG
         helper.log_format(class_labels, self.lkeys, self.rkeys, self.overlapping_classes, self.accuracy)
 
         # left child
         if len(self.lkeys) > 1:
            self.lchild = TreeNode(train, self.lkeys)
         else:
-            print 'PROG: %s' % self.lkeys #PROG
-            print helper.log_format(self.lkeys)
+            #print 'PROG: %s' % self.lkeys #PROG
+            helper.log_format(self.lkeys)
 
         # right child
         if len(self.rkeys) > 1:
            self.rchild = TreeNode(train, self.rkeys)
         else:
-            print 'PROG: %s' % self.rkeys #PROG
-            print helper.log_format(self.rkeys)
+            #print 'PROG: %s' % self.rkeys #PROG
+            helper.log_format(self.rkeys)
 
 
     def __repr__(self):

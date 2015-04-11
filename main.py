@@ -13,7 +13,6 @@ if __name__ == '__main__':
     # Digit dataset
     TRAINING_DATA_PATH = 'optdigits/optdigits.tra'
     TESTING_DATA_PATH = 'optdigits/optdigits.tes'
-    #CLASS_LABELS = set(range(0,10)) # Class labels are b/w 0..9 (inclusive)
     CLASS_LABELS = set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
     # Latin Letter Dataset

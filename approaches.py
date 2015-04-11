@@ -5,6 +5,10 @@ from multiprocessing import Pool, cpu_count
 import itertools
 import time
 
+import cProfile
+import StringIO
+import pstats
+
 import classes
 import helper
 
@@ -45,7 +49,7 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
 
         # Train the SVM here
         if linear_kernel:
-            clf = svm.LinearSVC()
+            clf = svm.LinearSVC(random_state=0)
         else:
             clf = svm.SVC()
         clf.fit(twoclass_train_data, twoclass_train_label)
@@ -55,9 +59,23 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
 
     return results
 
+def _profiling_wrapper(x):
+    p = cProfile.Profile()
+    p.enable()
+    arg_tuple = x
+    results = p.runcall(_train_and_test, x)
+    p.disable()
+    s = StringIO.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(p, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print '*'*80
+    print s.getvalue()
+    return results
+
 def _train_and_test(arg_tuple):
     initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
-    clf = svm.LinearSVC()
+    clf = svm.LinearSVC(random_state=0)
 
     # Train classifier based on initial two classes.
     # extract data points from the train object, generate labels on the fly
@@ -72,7 +90,7 @@ def _train_and_test(arg_tuple):
             mapping[1].add(label)
 
     # Create a new SVC
-    clf = svm.LinearSVC()
+    clf = svm.LinearSVC(random_state=0)
 
     # Formulate training set and labels
     train_samples, train_labels = [], []
@@ -109,6 +127,22 @@ def _train_and_test(arg_tuple):
                              partition=tuple(mapping.itervalues()),
                              overlap=overlap,
                              classifier=clf)
+
+    #### Supposedly optimized code
+    # Get overlap
+    # Greater the value of each overlap, the more it is.
+    #overlap = {}
+    #scores = {}
+    #for key in class_labels:
+    #    scores[key] = clf.score(test[key], [reverse_mapping[key]]*len(test[key]))
+    #    overlap[key] = 0.5 - abs(scores[key] - 0.5)
+
+
+    #result = classes.Result(accuracy=sum(len(test[x[0]])*x[1] for x in scores.items())*1.0/sum(len(x) for x in test.values()),
+    #                         partition=tuple(mapping.itervalues()),
+    #                         overlap=overlap,
+    #                         classifier=clf)
+
     return result
 
 def pairwise_SVM_A1(test, train, class_labels):
@@ -129,15 +163,15 @@ def pairwise_SVM_A1(test, train, class_labels):
         remaining_labels = set(class_labels - set(initial_two))
         mapping = {0: {initial_two[0]}, 1: {initial_two[1]}}
         inputs.append((initial_two, remaining_labels, mapping, test, train, class_labels))
-    
+
     print len(inputs)
     print 'CPU Count: {}'.format(cpu_count())
 
     pool = Pool(cpu_count())
-    results = pool.map_async(_train_and_test, inputs)
-    while not results.ready():
-        print('Num left: {}'.format(results._number_left))
-        time.sleep(2)
+    results = pool.map_async(_profiling_wrapper, inputs)
+    #while not results.ready():
+    #    print('Num left: {}'.format(results._number_left))
+    #    time.sleep(2)
     results = results.get()
     pool.close()
     pool.join()

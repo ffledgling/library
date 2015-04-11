@@ -115,7 +115,6 @@ class TreeNode(object):
         correct = filter(lambda x: x[0]==x[1], zip(test_labels, predictions))
         print 'Correctly labeled classes %s/%s' % (len(correct), len(predictions))
         print 'Accuracy: %s' % (1.0*len(correct)/len(predictions))
-        
 
 def objective_function(accuracy=None, balance=None, overlap=None, margin=None):
     # Take all the different things we measure and create a single unifying function
@@ -162,7 +161,7 @@ def get_statistics(results):
 
     print 'Best Accuracy: %s\n%s' % (max_acc.accuracy, max_acc)
     print 'Highest Value: %s\n%s' % (max_val.value, max_val)
-    print 
+    print
     print 'Average Accuracy: %s' % (str(sum_acc/size),)
     print 'Average Value: %s' % (str(sum_val/size),)
 

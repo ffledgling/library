@@ -37,10 +37,10 @@ def class_partitions(class_labels):
 
 def get_optimal_classifier(approach, *args, **kwargs):
     results = approach(*args, **kwargs)
-    print 'PRINTING ALL RESULTS'
-    pprint.pprint([x.value for x in results])
-    pprint.pprint(results)
-    print 'DONE.'
+    #print 'PRINTING ALL RESULTS'
+    #pprint.pprint([x.value for x in results])
+    #pprint.pprint(results)
+    #print 'DONE.'
     optimal_result = results[0]
     for result in results:
         if result.value > optimal_result.value:
