@@ -275,3 +275,15 @@ set(['A', 'C', 'B', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'J', 'M', 'L', 'O', 'N', 
 real    325m51.080s
 user    22m38.424s
 sys     0m3.744s
+
+Latin.optimized:
+real    46m29.506s
+user    150m38.472s
+sys     0m43.949s
+
+Yes, the "optimized" code ran slower...
+
+Latin.not-optimized:
+real    45m33.127s
+user    150m24.475s
+sys     0m39.720s
