@@ -60,17 +60,23 @@ def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
     return results
 
 def _profiling_wrapper(x):
-    p = cProfile.Profile()
-    p.enable()
-    arg_tuple = x
-    results = p.runcall(_train_and_test, x)
-    p.disable()
-    s = StringIO.StringIO()
-    sortby = 'cumulative'
-    ps = pstats.Stats(p, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print '*'*80
-    print s.getvalue()
+
+    # Profiled run
+    #p = cProfile.Profile()
+    #p.enable()
+    #arg_tuple = x
+    #results = p.runcall(_train_and_test, x)
+    #p.disable()
+    #s = StringIO.StringIO()
+    #sortby = 'cumulative'
+    #ps = pstats.Stats(p, stream=s).sort_stats(sortby)
+    #ps.print_stats()
+    #print '*'*80
+    #print s.getvalue()
+
+    # Normal run
+    results = _train_and_test(x)
+
     return results
 
 def _train_and_test(arg_tuple):
