@@ -74,20 +74,22 @@ def _profiling_wrapper(x):
     return results
 
 def _train_and_test(arg_tuple):
-    initial_two, remaining_labels, mapping, test, train, class_labels = arg_tuple
-    clf = svm.LinearSVC(random_state=0)
+    initial_two, pre_partition, remaining_labels, mapping, test, train, class_labels = arg_tuple
 
-    # Train classifier based on initial two classes.
-    # extract data points from the train object, generate labels on the fly
-    clf.fit(train[initial_two[0]] + train[initial_two[1]],
-            [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
+    if not pre_partition:
+        clf = svm.LinearSVC(random_state=0)
 
-    for label in remaining_labels:
-        score = clf.score(train[label], [0]*len(train[label]))
-        if score > 0.5:
-            mapping[0].add(label)
-        else:
-            mapping[1].add(label)
+        # Train classifier based on initial two classes.
+        # extract data points from the train object, generate labels on the fly
+        clf.fit(train[initial_two[0]] + train[initial_two[1]],
+                [0]*len(train[initial_two[0]]) + [1]*len(train[initial_two[1]]))
+
+        for label in remaining_labels:
+            score = clf.score(train[label], [0]*len(train[label]))
+            if score > 0.5:
+                mapping[0].add(label)
+            else:
+                mapping[1].add(label)
 
     # Create a new SVC
     clf = svm.LinearSVC(random_state=0)
@@ -124,8 +126,9 @@ def _train_and_test(arg_tuple):
         overlap[key] = 0.5 - abs(clf.score(test[key], [reverse_mapping[key]]*len(test[key])) - 0.5)
 
     result = classes.Result(accuracy=clf.score(test_samples, test_labels),
-                             partition=tuple(mapping.itervalues()),
+                             partition=tuple([mapping[0], mapping[1]]),
                              overlap=overlap,
+                             orig_pair=initial_two,
                              classifier=clf)
 
     #### Supposedly optimized code
@@ -145,7 +148,7 @@ def _train_and_test(arg_tuple):
 
     return result
 
-def pairwise_SVM_A1(test, train, class_labels):
+def pairwise_SVM_A1(test, train, class_labels, pair_table=None):
     # Take pairwise classes
     # Compute SVM for that class
     # Then put each class in one of the two major classes
@@ -159,10 +162,14 @@ def pairwise_SVM_A1(test, train, class_labels):
     inputs = []
     # For every possible pair of classes
     for initial_two in itertools.combinations(class_labels, 2):
-
         remaining_labels = set(class_labels - set(initial_two))
-        mapping = {0: {initial_two[0]}, 1: {initial_two[1]}}
-        inputs.append((initial_two, remaining_labels, mapping, test, train, class_labels))
+        if pair_table is not None:
+            mapping[0] = pair_table[initial_two][0] & class_labels
+            mapping[1] = pair_table[initial_two][1] & class_labels
+            inputs.append((initial_two, True, remaining_labels, mapping, test, train, class_labels))
+        else:
+            mapping = {0: {initial_two[0]}, 1: {initial_two[1]}}
+            inputs.append((initial_two, False, remaining_labels, mapping, test, train, class_labels))
 
     print len(inputs)
     print 'CPU Count: {}'.format(cpu_count())

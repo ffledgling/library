@@ -22,10 +22,11 @@ class Class(object):
 
 class Result(object):
 
-    def __init__(self, value=None, accuracy=None, balance=None, overlap=None, margin=None, partition=None, classifier=None):
+    def __init__(self, value=None, accuracy=None, balance=None, overlap=None, margin=None, orig_pair=None, partition=None, classifier=None):
         self.accuracy = accuracy
         self.overlap = overlap
         self.margin = margin
+        self.orig_pair = orig_pair
         self.partition = partition
         self.classifier = classifier
 
@@ -38,12 +39,12 @@ class Result(object):
         self.value = objective.objective_function(accuracy=self.accuracy, balance=self.balance, overlap=self.overlap, margin=self.margin, purity=self.purity)
 
     def __repr__(self):
-        return ('(Value: %s' ', Accuracy: %s, Balance: %s, Overlap: %s, Margin: %s, Purity: %s, Overlapping-Classes: %s, Overlap-value: %s, Partition: %s, Classifier: %s)'
-                % (repr(self.value),  repr(self.accuracy),  repr(self.balance),  repr(self.overlap),  repr(self.margin),  repr(self.purity), repr(self.overlapping_classes), repr(self.overlap_value), repr(self.partition), repr(self.classifier)))
+        return ('(Value: %s' ', Accuracy: %s, Balance: %s, Overlap: %s, Margin: %s, Purity: %s, Overlapping-Classes: %s, Overlap-value: %s, Original-Pair: %s, Partition: %s, Classifier: %s)'
+                % (repr(self.value),  repr(self.accuracy),  repr(self.balance),  repr(self.overlap),  repr(self.margin),  repr(self.purity), repr(self.overlapping_classes), repr(self.overlap_value), repr(self.orig_pair), repr(self.partition), repr(self.classifier)))
 
 
 class TreeNode(object):
-    def __init__(self, train, class_labels):
+    def __init__(self, train, class_labels, pair_table=None):
         # Assumes train is well shuffled/random/not-ordered
         self.class_labels = class_labels
         self.subtrain = {}
@@ -57,7 +58,8 @@ class TreeNode(object):
                 self.subtrain[key] = train[key][:l*7/8]
                 self.subtest[key] = train[key][l*7/8:]
 
-        optimal = helper.get_optimal_classifier(approaches.pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
+        results, pair_table = helper.get_classifiers(approaches.pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
+        optimal = helper.get_optimal_classifier(results)
         #print 'Optimal:'
         #pprint.pprint(optimal)
 
@@ -84,14 +86,14 @@ class TreeNode(object):
 
         # left child
         if len(self.lkeys) > 1:
-           self.lchild = TreeNode(train, self.lkeys)
+           self.lchild = TreeNode(train, self.lkeys, pair_table)
         else:
             #print 'PROG: %s' % self.lkeys #PROG
             helper.log_format(self.lkeys)
 
         # right child
         if len(self.rkeys) > 1:
-           self.rchild = TreeNode(train, self.rkeys)
+           self.rchild = TreeNode(train, self.rkeys, pair_table)
         else:
             #print 'PROG: %s' % self.rkeys #PROG
             helper.log_format(self.rkeys)

@@ -35,18 +35,23 @@ def class_partitions(class_labels):
 
     return splits
 
-def get_optimal_classifier(approach, *args, **kwargs):
-    results = approach(*args, **kwargs)
-    #print 'PRINTING ALL RESULTS'
-    #pprint.pprint([x.value for x in results])
-    #pprint.pprint(results)
-    #print 'DONE.'
+def get_optimal_classifier(results):
     optimal_result = results[0]
     for result in results:
         if result.value > optimal_result.value:
             optimal_result = result
 
     return optimal_result
+
+def get_classifiers(approach, *args, **kwargs):
+    #print 'PRINTING ALL RESULTS'
+    #pprint.pprint([x.value for x in results])
+    #pprint.pprint(results)
+    #print 'DONE.'
+    results = approach(*args, **kwargs)
+    pair_table = {r.orig_pair: r.partition for r in results}
+
+    return results, pair_table
 
 def get_statistics(results):
     # Takes a list of 'Metrics' as input
