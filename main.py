@@ -5,6 +5,9 @@ import helper
 
 import pprint
 
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+from sklearn.svm import LinearSVC as lsvc
+
 
 if __name__ == '__main__':
 
@@ -36,3 +39,14 @@ if __name__ == '__main__':
         test_labels += [key]*len(test[key])
     x._score(test_vectors, test_labels)
     print x
+
+    #pprint.pprint(test.keys())
+    # Create Train
+    train_vectors = []
+    train_labels = []
+    for key in train.keys():
+        train_vectors += train[key]
+        train_labels += [key]*len(train[key])
+
+    print 'OneVsOne based on LinearSVC: %s' % lsvc(random_state=0).fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    print 'OneVsRest based on LinearSVC: %s' % OneVsRestClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
