@@ -74,7 +74,7 @@ def get_statistics(results):
 
     print 'Best Accuracy: %s\n%s' % (max_acc.accuracy, max_acc)
     print 'Highest Value: %s\n%s' % (max_val.value, max_val)
-    print 
+    print
     print 'Average Accuracy: %s' % (str(sum_acc/size),)
     print 'Average Value: %s' % (str(sum_val/size),)
 
@@ -99,3 +99,25 @@ def log_format(labels, lpart=None, rpart=None, overlap=None, accuracy=None, clas
     with open(config.FILENAME, 'a') as f:
         f.write(json.dumps(data)+'\n')
     return json.dumps(data)
+
+def exportTreeToJSON(tree):
+    def _exportTreeToJSON(tree):
+        offset_table = {}
+        def removeKey(root):
+            root['classes'] = list(root['classes'])
+            h = hash(frozenset(root['classes']))
+            if not (h in offset_table):
+                offset_table[h] = list(root['classifier'])
+            root['hash'] = h
+            del root['classifier']
+
+            if root.has_key('negative'):
+                removeKey(root['negative'])
+            if root.has_key('positive'):
+                removeKey(root['positive'])
+
+        removeKey(tree)
+        return {'table': offset_table, 'tree': tree}
+
+    return json.dumps(_exportTreeToJSON(tree))
+    #return _exportTreeToJSON(tree)

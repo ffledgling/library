@@ -121,3 +121,17 @@ class TreeNode(object):
         correct = filter(lambda x: x[0]==x[1], zip(test_labels, predictions))
         print 'Correctly labeled classes %s/%s' % (len(correct), len(predictions))
         print 'Accuracy: %s' % (1.0*len(correct)/len(predictions))
+
+    def returnDictRepr(self):
+        root = {}
+
+        root['classes'] = self.class_labels
+        root['classifier'] = self.classifier.coef_[0]
+
+        if self.lchild:
+            root['negative'] = self.lchild.returnDictRepr()
+
+        if self.rchild:
+            root['positive'] = self.rchild.returnDictRepr()
+
+        return root

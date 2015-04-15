@@ -40,6 +40,14 @@ if __name__ == '__main__':
     x._score(test_vectors, test_labels)
     print x
 
+    print x.classifier.__dict__.keys()
+    pprint.pprint(x.classifier.coef_)
+    print x.classifier._enc.classes_
+    print x.classifier.coef_.shape
+    print test_labels[0]
+    print x.class_labels
+    pprint.pprint(helper.exportTreeToJSON(x.returnDictRepr()))
+
     #pprint.pprint(test.keys())
     # Create Train
     train_vectors = []
@@ -48,5 +56,5 @@ if __name__ == '__main__':
         train_vectors += train[key]
         train_labels += [key]*len(train[key])
 
-    print 'OneVsOne based on LinearSVC: %s' % lsvc(random_state=0).fit(train_vectors, train_labels).score(test_vectors, test_labels)
-    print 'OneVsRest based on LinearSVC: %s' % OneVsRestClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    #print 'OneVsOne based on LinearSVC: %s' % OneVsOneClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    #print 'OneVsRest based on LinearSVC: %s' % OneVsRestClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
