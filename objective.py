@@ -7,16 +7,21 @@ def objective_function_multiplicative(accuracy=None, balance=None, overlap=None,
 
     if accuracy is not None:
         value *= accuracy
+    print 'Accuracy:', value
     if balance is not None:
         value *= balance
+    print 'Balance:', value
     if overlap:
         #value *= (1 - (sum((1 for x in filter(lambda x: x>=0.05, (overlap.values()))))/len(overlap)))
         value *= (1 - (sum((1 for x in overlap.values() if x >= 0.05 ))/len(overlap)))
         #value *= 1.0
+    print 'Overlap:', value
     if margin:
         value *= margin
-    if purity is not None:
+    print 'margin:', value
+    if purity != None:
         value *= purity
+    print 'purity:', value
 
     return value
 

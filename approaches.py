@@ -1,5 +1,6 @@
 import sklearn
 import sklearn.svm as svm
+from sklearn.mixture import GMM
 
 from multiprocessing import Pool, cpu_count
 import itertools
@@ -11,6 +12,8 @@ import pstats
 
 import classes
 import helper
+
+import sys
 
 
 def bruteforce_SVM(train, test, class_labels, linear_kernel=True):
@@ -180,3 +183,83 @@ def pairwise_SVM_A1(test, train, class_labels):
     pool.join()
 
     return results
+
+def gmm_separator(test, train, class_labels):
+    model = GMM(n_components=2, covariance_type='spherical')
+    train_data = []
+    for k in class_labels:
+        train_data += train[k]
+    model.fit(train_data)
+
+    mapping = {0: set(), 1: set()}
+
+    for cls in class_labels:
+        r = model.predict(test[cls])
+        #print r
+        s = sum(r)*1.0/len(test[cls])
+        #print s
+        if s > 0.5:
+            mapping[1].add(cls)
+        else:
+            mapping[0].add(cls)
+
+    print mapping
+
+    # Copied exactly from _train_and_test
+    # Should ideally be factored out as a common sub-routine.
+    # Create a new SVC
+    clf = svm.LinearSVC(random_state=0)
+
+    # Formulate training set and labels
+    train_samples, train_labels = [], []
+    for label in mapping[0]:
+        train_samples += train[label]
+        train_labels += [0]*len(train[label])
+    for label in mapping[1]:
+        train_samples += train[label]
+        train_labels += [1]*len(train[label])
+
+    # Train the new SVC, based on decided split
+    clf.fit(train_samples, train_labels)
+
+    # Generate reverse mapping
+    reverse_mapping = {}
+    for binary_label, labels in mapping.items():
+        for label in labels:
+            reverse_mapping[label] = binary_label
+
+    # Test it
+    test_samples, test_labels = [], []
+    for label in class_labels:
+        test_samples += test[label]
+        test_labels += [reverse_mapping[label]]*len(test[label])
+
+
+    # Get overlap
+    # Greater the value of each overlap, the more it is.
+    overlap = {}
+    for key in class_labels:
+        overlap[key] = 0.5 - abs(clf.score(test[key], [reverse_mapping[key]]*len(test[key])) - 0.5)
+
+    result = classes.Result(accuracy=clf.score(test_samples, test_labels),
+                             partition=tuple(mapping.itervalues()),
+                             overlap=overlap,
+                             classifier=clf)
+
+    #### Supposedly optimized code
+    # Get overlap
+    # Greater the value of each overlap, the more it is.
+    #overlap = {}
+    #scores = {}
+    #for key in class_labels:
+    #    scores[key] = clf.score(test[key], [reverse_mapping[key]]*len(test[key]))
+    #    overlap[key] = 0.5 - abs(scores[key] - 0.5)
+
+
+    #result = classes.Result(accuracy=sum(len(test[x[0]])*x[1] for x in scores.items())*1.0/sum(len(x) for x in test.values()),
+    #                         partition=tuple(mapping.itervalues()),
+    #                         overlap=overlap,
+    #                         classifier=clf)
+
+    print result
+    return [result]

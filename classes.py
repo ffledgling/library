@@ -57,7 +57,10 @@ class TreeNode(object):
                 self.subtrain[key] = train[key][:l*7/8]
                 self.subtest[key] = train[key][l*7/8:]
 
-        optimal = helper.get_optimal_classifier(approaches.pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
+        print 'Got called with %s - %s' % (len(class_labels), class_labels)
+
+        #optimal = helper.get_optimal_classifier(approaches.pairwise_SVM_A1, self.subtest, self.subtrain, class_labels)
+        optimal = helper.get_optimal_classifier(approaches.gmm_separator, self.subtest, self.subtrain, class_labels)
         #print 'Optimal:'
         #pprint.pprint(optimal)
 
