@@ -1,7 +1,14 @@
+"""
+This module contains the methods for computing different objective
+functions that can be or are used while searching for the optimal classifier
+"""
+
 def objective_function_multiplicative(accuracy=None, balance=None, overlap=None, margin=None, purity=None):
-    # Take all the different things we measure and create a single unifying function
-    # use the value of this function to decide if something a good choice
-    # Values returned should always be b/w 0 and 1.
+    """
+    Take all the different things we measure and create a single unifying
+    function use the value of this function to decide if something a good
+    choice Values returned should always be b/w 0 and 1.
+    """
 
     value = 1.0
 
@@ -11,7 +18,7 @@ def objective_function_multiplicative(accuracy=None, balance=None, overlap=None,
         value *= balance
     if overlap:
         #value *= (1 - (sum((1 for x in filter(lambda x: x>=0.05, (overlap.values()))))/len(overlap)))
-        value *= (1 - (sum((1 for x in overlap.values() if x >= 0.05 ))/len(overlap)))
+        value *= (1 - (sum((1 for x in overlap.values() if x >= 0.05))/len(overlap)))
         #value *= 1.0
     if margin:
         value *= margin
@@ -21,8 +28,10 @@ def objective_function_multiplicative(accuracy=None, balance=None, overlap=None,
     return value
 
 def objective_function_wieghted_sum(accuracy=None, balance=None, overlap=None, margin=None, purity=None):
-    # Values returned and passed to this function should always be b/w 0 and 1.
-    # Compute weighted sums
+    """
+    Values returned and passed to this function should always be b/w 0 and 1.
+    Compute weighted sums
+    """
 
     # Parameters:
     A = 1.0
@@ -38,7 +47,7 @@ def objective_function_wieghted_sum(accuracy=None, balance=None, overlap=None, m
     if balance is not None:
         value += (B*balance)
     if overlap:
-        value += (C*(1 - (sum((1 for x in filter(lambda x: x>=0.05, (overlap.values()))))/len(overlap))))
+        value += (C*(1 - (sum((1 for x in filter(lambda x: x >= 0.05, (overlap.values()))))/len(overlap))))
     if margin:
     # Not normalized yet, keep out
         pass
@@ -48,10 +57,12 @@ def objective_function_wieghted_sum(accuracy=None, balance=None, overlap=None, m
     return value
 
 def objective_function(accuracy=None, balance=None, overlap=None, margin=None, purity=None):
-    # Wrapper function to call the correct underlying objective function based on need and implementation
+    """
+    Wrapper function to call the correct underlying objective function based on need and implementation
 
-    # Take all the different things we measure and create a single unifying function
-    # use the value of this function to decide if something a good choice
-    # Values returned should always be b/w 0 and 1.
+    Take all the different things we measure and create a single unifying function
+    use the value of this function to decide if something a good choice
+    Values returned should always be b/w 0 and 1.
+    """
 
     return objective_function_multiplicative(accuracy, balance, overlap, margin, purity)

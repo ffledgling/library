@@ -1,3 +1,5 @@
+""" This module contains helper functions for use by other modules """
+
 import itertools
 import pprint
 import json
@@ -5,11 +7,11 @@ import json
 import config
 
 def create_set(label_list):
+    """ Simply create and return a dictionary with the labels as keys """
     # This is a horrible misnomer
     d = {}
     for key in label_list:
         d[key] = []
-
     return d
 
 def populate_dataset(dataset, filepath):
@@ -29,13 +31,18 @@ def class_partitions(class_labels):
     splits = set()
     count = 0
 
-    for split in itertools.combinations(CLASS_LABELS, len(CLASS_LABELS)/2):
+    for split in itertools.combinations(class_labels, len(class_labels)/2):
         count += 1
-        splits.add(frozenset((frozenset(split),frozenset(CLASS_LABELS - set(split)))))
+        splits.add(frozenset((frozenset(split),frozenset(class_labels - set(split)))))
 
     return splits
 
 def get_optimal_classifier(approach, *args, **kwargs):
+    """
+    Given an approach to find a classifier, runs all the data through it
+    and obtains the best-performing classifier
+    """
+
     results = approach(*args, **kwargs)
     #print 'PRINTING ALL RESULTS'
     #pprint.pprint([x.value for x in results])
@@ -56,10 +63,10 @@ def get_statistics(results):
     #   Average Value
     #   Average Accuracy
 
-    max_val=results[0]
-    max_acc=results[0]
-    sum_val=results[0].value
-    sum_acc=results[0].accuracy
+    max_val = results[0]
+    max_acc = results[0]
+    sum_val = results[0].value
+    sum_acc = results[0].accuracy
 
     size = len(results)
 
@@ -81,20 +88,22 @@ def get_statistics(results):
     pprint.pprint(max_val.classifier.__dict__)
 
 def log_format(labels, lpart=None, rpart=None, overlap=None, accuracy=None, classifier=None):
+    """ Returns a formatted log string for use with the progress tracking file/log """
+
     data = {}
-    data['labels'] = list(sorted( labels ))
+    data['labels'] = list(sorted(labels))
     if lpart:
-        data['lpart'] = list(sorted( lpart))
-        data['lpure'] = list(sorted( lpart - overlap ))
+        data['lpart'] = list(sorted(lpart))
+        data['lpure'] = list(sorted(lpart - overlap))
     if rpart:
-        data['rpart'] = list(sorted( rpart ))
-        data['rpure'] = list(sorted( rpart - overlap ))
+        data['rpart'] = list(sorted(rpart))
+        data['rpure'] = list(sorted(rpart - overlap))
     if overlap:
-        data['overlap'] = list(sorted( overlap ))
+        data['overlap'] = list(sorted(overlap))
     if accuracy is not None:
         data['accuracy'] = '{:.4f}'.format(accuracy)
     if classifier:
-        data['classifier'] = list(sorted( classifier ))
+        data['classifier'] = list(sorted(classifier))
 
     with open(config.FILENAME, 'a') as f:
         f.write(json.dumps(data)+'\n')
@@ -106,7 +115,7 @@ def exportTreeToJSON(tree):
         def removeKey(root):
             root['classes'] = list(root['classes'])
             h = hash(frozenset(root['classes']))
-            if not (h in offset_table):
+            if not h in offset_table:
                 offset_table[h] = list(root['classifier'])
             root['hash'] = h
             del root['classifier']
