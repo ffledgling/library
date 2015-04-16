@@ -185,25 +185,47 @@ def pairwise_SVM_A1(test, train, class_labels):
     return results
 
 def gmm_separator(test, train, class_labels):
-    model = GMM(n_components=2, covariance_type='spherical')
-    train_data = []
-    for k in class_labels:
-        train_data += train[k]
-    model.fit(train_data)
 
     mapping = {0: set(), 1: set()}
+    print 'Before Mapping:',mapping
 
-    for cls in class_labels:
-        r = model.predict(test[cls])
-        #print r
-        s = sum(r)*1.0/len(test[cls])
-        #print s
-        if s > 0.5:
-            mapping[1].add(cls)
-        else:
-            mapping[0].add(cls)
+    if len(class_labels) > 2:
+        model = GMM(n_components=2, covariance_type='spherical')
+        train_data = []
+        for k in class_labels:
+            train_data += train[k]
+        model.fit(train_data)
 
-    print mapping
+        per_class_score = []
+        for cls in class_labels:
+            print len(test[cls])
+            r = model.predict(test[cls])
+            print r
+            s = sum(r)*1.0/len(test[cls])
+            print s
+            per_class_score.append((cls,s))
+            if s > 0.5:
+                mapping[1].add(cls)
+            else:
+                mapping[0].add(cls)
+
+        if len(mapping[0]) == 0 or len(mapping[1]) == 0:
+            # If GMM gives no split, then force a split
+            # Delete old splits
+            mapping[0].clear()
+            mapping[1].clear()
+
+            per_class_score.sort(cmp=lambda x,y: 1 if x[1] > y[1] else ( 0 if x[1] == y[1] else -1))
+            [mapping[0].add(x[0]) for x in per_class_score[:len(per_class_score)/2]]
+            [mapping[1].add(x[0]) for x in per_class_score[len(per_class_score)/2:]]
+
+    elif len(class_labels) == 2:
+        for i,v in enumerate(class_labels):
+            mapping[i].add(v)
+    else:
+        raise Exception('Should not be hitting this')
+
+    print 'After Mapping:',mapping
 
     # Copied exactly from _train_and_test
     # Should ideally be factored out as a common sub-routine.

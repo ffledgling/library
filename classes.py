@@ -72,6 +72,10 @@ class TreeNode(object):
         self.lkeys = optimal.partition[0]
         self.rkeys = optimal.partition[1]
 
+        print 'lkeys', self.lkeys
+        print 'rkeys', self.rkeys
+        print 'overlapping', self.overlapping_classes
+
         if (self.lkeys | self.overlapping_classes) != class_labels:
             self.lkeys = self.lkeys | self.overlapping_classes
         if (self.rkeys | self.overlapping_classes) != class_labels:
