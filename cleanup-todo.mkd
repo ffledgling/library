@@ -1,2 +1,4 @@
 - [ ] Replace silly commented out prints with logging (DEBUG, INFO mostly)
 - [ ] Make code adhere to PEP8
+    - [x] About 40% done.
+    - [ ] Do rest

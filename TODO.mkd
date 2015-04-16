@@ -1,10 +1,11 @@
 TODO
 ====
 
-- [ ] Figure out a way to partition the categories into two classes intially.
+- [x] Figure out a way to partition the categories into two classes intially.
     - [x] Equipartition the classes
     - [x] Take classes pairwise and treat then decide other classes accordingly
     - [ ] KNN
+    - [x] GMM
 - [x] Obtain data set
 - [ ] figure out how to return the obtained classifier to the client via API call.
 - [ ] Plan a way to actually scale the library once it's done.
@@ -17,7 +18,7 @@ Immediate TODO:
     - [x] Compute Overlap
     - [ ] Merge per-class overlap into a single value
     - [ ] How to use overlap to increase the accuracy
-- [ ] Figure out a way to extract params from trained classifier
+- [x] Figure out a way to extract params from trained classifier
     - [x] sklearn's coef\_
     - [x] sklearn's raw\_coef\_
     - [ ] Figure out how to compress the array

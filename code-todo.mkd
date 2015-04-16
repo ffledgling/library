@@ -1,31 +1,32 @@
 TODO:
 -----
 
-- Allow poorly classified classes to overlap, see if this improves accuracy.
-- Added parallelism.
+- [x] Allow poorly classified classes to overlap, see if this improves accuracy.
+- [x] Add parallelism.
 - Optimize memory (General)
 - Optimize how data is passed around within the same program/thread/node.
-- Improve TreeNode class' methods.
+- [x] Improve TreeNode class' methods.
 
 
 Long Haul TODO:
 ---------------
-- Replace ad-hoc printing with propper logging
-- Add progress bars for the library
+- [ ] Replace ad-hoc printing with propper logging
+- [ ] Add progress bars for the library
+- [x] Add Visualisation
 
 Current iteration issues
 ------------------------
 
-- Low accuracy (~90% with value based optimality)
+- [-] Low accuracy (~90% with value based optimality) {Ignored because data dependednt mostly}
 
 Overall Issues:
 ---------------
 
-- How many classes do we want to support? (100s? 1000s? more?)
+- How many classes do we want to support? (100s? 1000s? more?) Ans: 100-1000s.
 
-- How do we visualize our results?
-- How do export the Linear SVM?
+- How do we visualize our results? Ans: D3 Tree
+- How do export the Linear SVM? Ans: JSON Object
 
-- How do we distributed data among multiple nodes?
-- How big is the amount of data one node can handle?
-- Can we plugin hadoop?
+- How do we distributed data among multiple nodes? Ans: Do not know ATM.
+- How big is the amount of data one node can handle? Ans: As big as the (memory/number of processes).
+- Can we plugin hadoop? Ans: Possibly, needs invesitgation
