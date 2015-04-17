@@ -156,10 +156,10 @@ function update(treeData) {
                     return 'translate(' + initx + ',' + inity + ')';
                 })
                 .on('mouseover', function(d) {
-                    d3.select('#labels').html(d.labels);
-                    d3.select('#lpart-text').html(d.l_labels);
-                    d3.select('#rpart-text').html(d.r_labels);
-                    d3.select('#overlap').html(d.overlap);
+                    d3.select('#labels').html('('+d.labels.length+')'+d.labels);
+                    d3.select('#lpart-text').html('('+d.l_labels.length+')'+d.l_labels);
+                    d3.select('#rpart-text').html('('+d.r_labels.length+')'+d.r_labels);
+                    d3.select('#overlap').html('('+d.overlap.length+')'+d.overlap);
                     d3.select('#accuracy').html(d.accuracy);
                 })
                 .on('mouseout', function(d) {

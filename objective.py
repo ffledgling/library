@@ -56,6 +56,18 @@ def objective_function_wieghted_sum(accuracy=None, balance=None, overlap=None, m
 
     return value
 
+def objective_accuracy(accuracy=None, balance=None, overlap=None, margin=None, purity=None):
+    """
+    Use only accuracy
+    """
+
+    value = 1.0
+
+    if accuracy is not None:
+        value *= accuracy
+
+    return value
+
 def objective_function(accuracy=None, balance=None, overlap=None, margin=None, purity=None):
     """
     Wrapper function to call the correct underlying objective function based on need and implementation
@@ -65,4 +77,4 @@ def objective_function(accuracy=None, balance=None, overlap=None, margin=None, p
     Values returned should always be b/w 0 and 1.
     """
 
-    return objective_function_multiplicative(accuracy, balance, overlap, margin, purity)
+    return objective_accuracy(accuracy, balance, overlap, margin, purity)
