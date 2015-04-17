@@ -14,6 +14,15 @@ def create_set(label_list):
         d[key] = []
     return d
 
+def read_labels(filepath):
+    if filepath is None:
+        return None
+
+    with open(filepath, 'r') as f:
+        classes = [x.strip().rstrip() for x in f.readlines()]
+
+    return classes
+
 def populate_dataset(dataset, filepath):
     # Assumes last value in CSV is class label
     # TODO: make this more flexible
