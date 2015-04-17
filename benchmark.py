@@ -12,6 +12,11 @@ import numpy as np
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.svm import LinearSVC as lsvc
 from sklearn import preprocessing
+from sklearn.lda import LDA
+from sklearn.qda import QDA
+from sklearn.neighbors import KNeighborsClassifier, KDTree, BallTree
+from sklearn.gaussian_process import GaussianProcess
+from sklearn.ensemble import RandomForestClassifier
 
 if __name__ == '__main__':
 
@@ -99,3 +104,9 @@ if __name__ == '__main__':
 
     print 'OneVsOne based on LinearSVC: %s' % OneVsOneClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
     print 'OneVsRest based on LinearSVC: %s' % OneVsRestClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    print 'LDA: %s' % LDA().fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    print 'QDA: %s' % QDA().fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    print 'KNN: %s' % KNeighborsClassifier().fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    #print 'Gaussian Process: %s' % GaussianProcess().fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    print 'Random Forest: %s' % RandomForestClassifier().fit(train_vectors, train_labels).score(test_vectors, test_labels)
+
