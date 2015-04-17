@@ -8,25 +8,24 @@ import os
 import pprint
 import sys
 
+import numpy as np
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.svm import LinearSVC as lsvc
-
+from sklearn import preprocessing
 
 if __name__ == '__main__':
 
-    # Do dataset specific things here in main
-
     # Digit dataset
-    TRAINING_DATA_PATH = 'optdigits/optdigits.tra'
-    TESTING_DATA_PATH = 'optdigits/optdigits.tes'
-    CLASS_LABELS_PATH = None
-    CLASS_LABELS = set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+    #TRAINING_DATA_PATH = 'optdigits/optdigits.tra'
+    #TESTING_DATA_PATH = 'optdigits/optdigits.tes'
+    # CLASS_LABELS_PATH = None
+    #CLASS_LABELS = set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
     # Latin Letter Dataset
-    #TRAINING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tra'
-    #TESTING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tes'
-    #CLASS_LABELS_PATH = None
-    #CLASS_LABELS = set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
+    TRAINING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tra'
+    TESTING_DATA_PATH='../datasets/letter-recognition/letter-recognition.tes'
+    CLASS_LABELS_PATH = None
+    CLASS_LABELS = set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
 
     # Arg Handling
     parser = argparse.ArgumentParser()
@@ -62,28 +61,41 @@ if __name__ == '__main__':
 
     # create class label list
     CLASS_LABELS = helper.read_labels(CLASS_LABELS_PATH) or CLASS_LABELS
+    le = preprocessing.LabelEncoder()
+    le.fit(list(CLASS_LABELS))
 
     # create training set
     train = helper.create_set(CLASS_LABELS)
     helper.populate_dataset(train, TRAINING_DATA_PATH)
+    print 'Done populating Training dataset'
 
     # create testing set
     test = helper.create_set(CLASS_LABELS)
     helper.populate_dataset(test, TESTING_DATA_PATH)
+    print 'Done populating Test dataset'
 
-    x = classes.TreeNode(train, CLASS_LABELS)
     test_vectors = []
     test_labels = []
     for key in test.keys():
         test_vectors += test[key]
-        test_labels += [key]*len(test[key])
-    x._score(test_vectors, test_labels)
-    print x
+        l = [key]*len(test[key])
+        test_labels += list(le.transform(l))
+    print 'Done generating test vectors and labels'
 
-    print x.classifier.__dict__.keys()
-    pprint.pprint(x.classifier.coef_)
-    print x.classifier._enc.classes_
-    print x.classifier.coef_.shape
-    print test_labels[0]
-    print x.class_labels
-    pprint.pprint(helper.exportTreeToJSON(x.returnDictRepr()))
+    # Create Train
+    train_vectors = []
+    train_labels = []
+    for key in train.keys():
+        train_vectors += train[key]
+        l = [key]*len(train[key])
+        train_labels += list(le.transform(l))
+    print 'Done generating train vectors and labels'
+
+    train_labels = np.array(train_labels)
+    test_labels = np.array(test_labels)
+
+    train_vectors = np.array(train_vectors)
+    test_vectors = np.array(test_vectors)
+
+    print 'OneVsOne based on LinearSVC: %s' % OneVsOneClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
+    print 'OneVsRest based on LinearSVC: %s' % OneVsRestClassifier(lsvc(random_state=0)).fit(train_vectors, train_labels).score(test_vectors, test_labels)
